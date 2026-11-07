@@ -1,0 +1,57 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title class="ion-text-center">Control de Gastos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding ion-text-center login-content">
+  <div class="login-container">
+    <div class="brand-section">
+      <h1 class="app-title">Bienvenido</h1>
+      <p class="app-subtitle">Escanea tus recibos y toma el control de tus finanzas</p>
+    </div>
+
+    <ion-segment [value]="modo" (ionChange)="cambiarModo($event.detail.value)" class="custom-segment">
+      <ion-segment-button value="login">
+        <ion-label>Iniciar Sesión</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="registro">
+        <ion-label>Registrarse</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <ion-card class="auth-card">
+      <ion-card-header>
+        <ion-card-title>
+          {{ modo === 'login' ? 'Ingresa a tu cuenta' : 'Crea tu cuenta' }}
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form (ngSubmit)="onSubmit()">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Correo electrónico</ion-label>
+            <ion-input type="email" [(ngModel)]="correo" name="correo" required></ion-input>
+          </ion-item>
+
+          <ion-item fill="outline" class="form-item ion-margin-top">
+            <ion-label position="floating">Contraseña</ion-label>
+            <ion-input type="password" [(ngModel)]="contrasena" name="contrasena" required></ion-input>
+          </ion-item>
+
+          <div *ngIf="mensajeError" class="error-banner ion-margin-top">
+            <ion-text color="danger">{{ mensajeError }}</ion-text>
+          </div>
+
+          <div *ngIf="mensajeExito" class="success-banner ion-margin-top">
+            <ion-text color="success">{{ mensajeExito }}</ion-text>
+          </div>
+
+          <ion-button expand="block" type="submit" color="primary" class="ion-margin-top submit-btn">
+            {{ modo === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta' }}
+          </ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
