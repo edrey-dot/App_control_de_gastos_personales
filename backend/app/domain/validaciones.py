@@ -7,6 +7,9 @@ de base de datos, red ni servicios externos.
 from datetime import date
 from typing import Optional
 
+# Constante de dominio para evitar cadenas mágicas y permitir reutilización
+ERROR_FECHA_POSTERIOR_A_HOY: str = "La fecha no puede ser posterior a hoy"
+
 
 def validar_fecha_gasto(fecha: date, hoy: Optional[date] = None) -> date:
     """Valida que la fecha de un gasto no sea posterior a hoy.
@@ -21,10 +24,9 @@ def validar_fecha_gasto(fecha: date, hoy: Optional[date] = None) -> date:
     :return: La fecha validada.
     :raises ValueError: Si la fecha es posterior a 'hoy'.
     """
-    if hoy is None:
-        hoy = date.today()
+    fecha_referencia = date.today() if hoy is None else hoy
 
-    if fecha > hoy:
-        raise ValueError("La fecha no puede ser posterior a hoy")
+    if fecha > fecha_referencia:
+        raise ValueError(ERROR_FECHA_POSTERIOR_A_HOY)
 
     return fecha
