@@ -1,9 +1,13 @@
+import base64
 import json
 from abc import ABC, abstractmethod
 
 import httpx
 from app.core.config import AI_PROVIDER, GEMINI_API_KEY
 from app.schemas.recibo import LecturaResponse
+
+# Timeout estándar recomendado para llamadas a servicios externos de IA
+TIMEOUT_IA_SEGUNDOS: float = 4.0
 
 
 def normalizar_monto_colombiano(valor_str: str) -> float | None:
@@ -58,9 +62,10 @@ class GeminiReceiptReader(BaseReceiptReader):
     async def leer_recibo(
         self, contenido_imagen: bytes, content_type: str
     ) -> LecturaResponse:
-        import base64
-
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"gemini-1.5-flash:generateContent?key={self.api_key}"
+        )
         encoded_image = base64.b64encode(contenido_imagen).decode("utf-8")
 
         prompt = (
@@ -89,31 +94,41 @@ class GeminiReceiptReader(BaseReceiptReader):
             "generationConfig": {"response_mime_type": "application/json"},
         }
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload)
-            if resp.status_code != 200:
-                return LecturaResponse(
-                    mensaje="Error al comunicarse con el servicio de IA"
-                )
+        # H-03 & H-06: Manejo explícito de timeouts y fallos de conexión HTTP
+        try:
+            async with httpx.AsyncClient(timeout=TIMEOUT_IA_SEGUNDOS) as client:
+                headers = {"x-goog-api-key": self.api_key}
+                resp = await client.post(url, headers=headers, json=payload)
+                if resp.status_code != 200:
+                    return LecturaResponse(
+                        mensaje="Error al comunicarse con el servicio de IA"
+                    )
 
-            data = resp.json()
-            try:
+                data = resp.json()
                 candidate_text = data["candidates"][0]["content"]["parts"][0]["text"]
                 parsed = json.loads(candidate_text)
                 return LecturaResponse(
                     comercio=parsed.get("comercio"),
                     fecha=parsed.get("fecha"),
-                    monto=float(parsed["monto"])
-                    if parsed.get("monto") is not None
-                    else None,
-                    mensaje="No se pudo leer el monto"
-                    if parsed.get("monto") is None
-                    else None,
+                    monto=(
+                        float(parsed["monto"])
+                        if parsed.get("monto") is not None
+                        else None
+                    ),
+                    mensaje=(
+                        "No se pudo leer el monto"
+                        if parsed.get("monto") is None
+                        else None
+                    ),
                 )
-            except (json.JSONDecodeError, KeyError, ValueError):
-                return LecturaResponse(
-                    mensaje="No se pudo procesar la respuesta de la IA"
-                )
+        except httpx.TimeoutException:
+            return LecturaResponse(
+                mensaje="El servicio de IA no responde o tardo demasiado"
+            )
+        except (httpx.RequestError, json.JSONDecodeError, KeyError, ValueError):
+            return LecturaResponse(
+                mensaje="No se pudo procesar la respuesta de la IA"
+            )
 
 
 def obtener_receipt_reader() -> BaseReceiptReader:
