@@ -1,6 +1,7 @@
 from datetime import date
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, field_validator
+
 from app.domain.validaciones import validar_fecha_gasto
 
 
@@ -65,4 +66,4 @@ class ResumenMensualResponse(BaseModel):
     mes: int
     total_mes: float
     items: list[ItemResumen]
-    mensaje: Optional[str] = None
+    mensaje: str | None = None

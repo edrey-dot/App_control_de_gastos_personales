@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from app.db.session import engine, Base, SessionLocal
+from app.api import auth, categorias, gastos, recibos, topes
 from app.db.models import Categoria
-from app.api import auth, categorias, gastos, topes, recibos
+from app.db.session import Base, SessionLocal, engine
 
 
 def inicializar_bd():
@@ -36,9 +37,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="API de Control de Gastos Personales",
-    description="Backend FastAPI con autenticación JWT, registro de gastos y lectura con IA",
+    description=(
+        "Backend FastAPI con autenticación JWT, registro de gastos y lectura con IA"
+    ),
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configuración de CORS para permitir la conexión desde Ionic / Angular
@@ -48,14 +51,18 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Location"]
+    expose_headers=["Location"],
 )
 
 
 # Manejador personalizado de errores de validación
 @app.exception_handler(RequestValidationError)
-async def custom_validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Distingue entre 400 (campos extra prohibidos / JSON mal formado) y 422 (validaciones de negocio con mensaje exacto)."""
+async def custom_validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    """Distingue entre 400 (campos extra prohibidos / JSON mal formado)
+    y 422 (validaciones de negocio con mensaje exacto).
+    """
     errores = exc.errors()
 
     for err in errores:
@@ -64,7 +71,7 @@ async def custom_validation_exception_handler(request: Request, exc: RequestVali
             campo = err.get("loc", ["campo"])[-1]
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                content={"detail": f"Campo no permitido: {campo}"}
+                content={"detail": f"Campo no permitido: {campo}"},
             )
 
         # Errores con mensaje personalizado de negocio
@@ -79,16 +86,15 @@ async def custom_validation_exception_handler(request: Request, exc: RequestVali
             "El monto debe ser un numero mayor a 0",
             "Elige una categoria",
             "El tope debe ser mayor a $0",
-            "El comercio es obligatorio"
+            "El comercio es obligatorio",
         ]:
             return JSONResponse(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                content={"detail": msg}
+                content={"detail": msg},
             )
 
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": errores}
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": errores}
     )
 
 
@@ -105,5 +111,5 @@ def raiz():
     return {
         "sistema": "Control de Gastos Personales API",
         "estado": "operativo",
-        "documentacion": "/docs"
+        "documentacion": "/docs",
     }

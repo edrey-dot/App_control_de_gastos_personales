@@ -7,14 +7,14 @@ Criterios de aceptación (HU-02):
 """
 
 from datetime import date, timedelta
+
 import pytest
-
 from app.domain.validaciones import validar_fecha_gasto
-
 
 # ==============================================================================
 # Casos Normales (Al menos 2)
 # ==============================================================================
+
 
 def test_hu02_escenario_1_fecha_pasada_es_valida():
     """HU-02 Escenario 1: Una fecha en el pasado respecto a 'hoy' es válida."""
@@ -39,6 +39,7 @@ def test_hu02_fecha_pasada_sin_parametro_hoy_usa_fecha_actual():
 # Casos Límite (Al menos 2)
 # ==============================================================================
 
+
 def test_hu02_limite_fecha_igual_a_hoy_es_valida():
     """HU-02 Caso límite: Una fecha exactamente igual al umbral 'hoy' es válida."""
     hoy_simulado = date(2026, 10, 24)
@@ -62,6 +63,7 @@ def test_hu02_limite_bisiesto_fin_de_mes_es_valida():
 # ==============================================================================
 # Casos de Error (Mensaje exacto según criterio de aceptación)
 # ==============================================================================
+
 
 def test_hu02_escenario_2_error_fecha_futura_rechazada_con_mensaje_exacto():
     """HU-02 Escenario 2: Rechaza fecha futura con el mensaje exacto especificado."""

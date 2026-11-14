@@ -5,13 +5,12 @@ de base de datos, red ni servicios externos.
 """
 
 from datetime import date
-from typing import Optional
 
 # Constante de dominio para evitar cadenas mágicas y permitir reutilización
 ERROR_FECHA_POSTERIOR_A_HOY: str = "La fecha no puede ser posterior a hoy"
 
 
-def validar_fecha_gasto(fecha: date, hoy: Optional[date] = None) -> date:
+def validar_fecha_gasto(fecha: date, hoy: date | None = None) -> date:
     """Valida que la fecha de un gasto no sea posterior a hoy.
 
     Regla de negocio HU-02:

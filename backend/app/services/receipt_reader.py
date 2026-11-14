@@ -1,15 +1,15 @@
 import json
-import re
 from abc import ABC, abstractmethod
-from typing import Optional
-import httpx
 
-from app.core.config import AI_PROVIDER, GEMINI_API_KEY, OPENAI_API_KEY
+import httpx
+from app.core.config import AI_PROVIDER, GEMINI_API_KEY
 from app.schemas.recibo import LecturaResponse
 
 
-def normalizar_monto_colombiano(valor_str: str) -> Optional[float]:
-    """HU-01: Normaliza texto de monto colombiano a número (ej: '$85.000' -> 85000.0)."""
+def normalizar_monto_colombiano(valor_str: str) -> float | None:
+    """HU-01: Normaliza texto de monto colombiano a número
+    (ej: '$85.000' -> 85000.0).
+    """
     if not valor_str:
         return None
     # Eliminar símbolos de moneda y espacios
@@ -28,54 +28,73 @@ def normalizar_monto_colombiano(valor_str: str) -> Optional[float]:
 
 class BaseReceiptReader(ABC):
     @abstractmethod
-    async def leer_recibo(self, contenido_imagen: bytes, content_type: str) -> LecturaResponse:
+    async def leer_recibo(
+        self, contenido_imagen: bytes, content_type: str
+    ) -> LecturaResponse:
         pass
 
 
 class MockReceiptReader(BaseReceiptReader):
     """Lector simulado para desarrollo y pruebas rápidas sin gastar cuota de API."""
-    async def leer_recibo(self, contenido_imagen: bytes, content_type: str) -> LecturaResponse:
+
+    async def leer_recibo(
+        self, contenido_imagen: bytes, content_type: str
+    ) -> LecturaResponse:
         # Devuelve datos realistas simulados según el escenario de la HU-01
         return LecturaResponse(
             comercio="Supermercado Central",
             fecha="2026-10-15",
             monto=85000.0,
-            mensaje=None
+            mensaje=None,
         )
 
 
 class GeminiReceiptReader(BaseReceiptReader):
     """Lector real usando Google Gemini Vision API."""
+
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    async def leer_recibo(self, contenido_imagen: bytes, content_type: str) -> LecturaResponse:
+    async def leer_recibo(
+        self, contenido_imagen: bytes, content_type: str
+    ) -> LecturaResponse:
         import base64
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
         encoded_image = base64.b64encode(contenido_imagen).decode("utf-8")
 
         prompt = (
             "Eres un extractor de datos de recibos de compra colombianos. "
             "Devuelve UNICAMENTE un JSON valido con las claves: "
-            "\"comercio\": string o null, \"fecha\": \"AAAA-MM-DD\" o null, \"monto\": numero o null "
-            "(el total en pesos, sin puntos ni simbolos). "
-            "NO incluyas nombre del cliente, tarjeta, direccion ni ningun otro dato sensible."
+            '"comercio": string o null, "fecha": "AAAA-MM-DD" o null, '
+            '"monto": numero o null (el total en pesos, sin puntos ni simbolos). '
+            "NO incluyas nombre del cliente, tarjeta, direccion "
+            "ni ningun otro dato sensible."
         )
 
         payload = {
-            "contents": [{
-                "parts": [
-                    {"text": prompt},
-                    {"inline_data": {"mime_type": content_type, "data": encoded_image}}
-                ]
-            }],
-            "generationConfig": {"response_mime_type": "application/json"}
+            "contents": [
+                {
+                    "parts": [
+                        {"text": prompt},
+                        {
+                            "inline_data": {
+                                "mime_type": content_type,
+                                "data": encoded_image,
+                            }
+                        },
+                    ]
+                }
+            ],
+            "generationConfig": {"response_mime_type": "application/json"},
         }
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(url, json=payload)
             if resp.status_code != 200:
-                return LecturaResponse(mensaje="Error al comunicarse con el servicio de IA")
+                return LecturaResponse(
+                    mensaje="Error al comunicarse con el servicio de IA"
+                )
 
             data = resp.json()
             try:
@@ -84,11 +103,17 @@ class GeminiReceiptReader(BaseReceiptReader):
                 return LecturaResponse(
                     comercio=parsed.get("comercio"),
                     fecha=parsed.get("fecha"),
-                    monto=float(parsed["monto"]) if parsed.get("monto") is not None else None,
-                    mensaje="No se pudo leer el monto" if parsed.get("monto") is None else None
+                    monto=float(parsed["monto"])
+                    if parsed.get("monto") is not None
+                    else None,
+                    mensaje="No se pudo leer el monto"
+                    if parsed.get("monto") is None
+                    else None,
                 )
-            except Exception:
-                return LecturaResponse(mensaje="No se pudo procesar la respuesta de la IA")
+            except (json.JSONDecodeError, KeyError, ValueError):
+                return LecturaResponse(
+                    mensaje="No se pudo procesar la respuesta de la IA"
+                )
 
 
 def obtener_receipt_reader() -> BaseReceiptReader:

@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
@@ -35,4 +34,4 @@ class TopeResponse(BaseModel):
     total_gastado: float
     porcentaje: float
     alerta_80: bool
-    mensaje_alerta: Optional[str] = None
+    mensaje_alerta: str | None = None

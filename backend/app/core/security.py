@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+
 import jwt
-from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.db.session import get_db
+from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from app.db.models import Usuario
+from app.db.session import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/sesiones")
@@ -24,23 +24,26 @@ def obtener_contrasena_hash(contrasena: str) -> str:
     return pwd_context.hash(contrasena)
 
 
-def crear_token_acceso(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def crear_token_acceso(data: dict, expires_delta: timedelta | None = None) -> str:
     """Crea un token JWT firmado con fecha de expiración."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def obtener_usuario_actual(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> Usuario:
-    """Dependencia para validar el token JWT y obtener el usuario autenticado (401 si falla)."""
+    """Dependencia para validar el token JWT y obtener el usuario autenticado
+    (401 si falla).
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Credenciales de autenticación no válidas o expiradas",
@@ -51,8 +54,8 @@ def obtener_usuario_actual(
         correo: str = payload.get("sub")
         if correo is None:
             raise credentials_exception
-    except jwt.PyJWTError:
-        raise credentials_exception
+    except jwt.PyJWTError as err:
+        raise credentials_exception from err
 
     usuario = db.query(Usuario).filter(Usuario.correo == correo).first()
     if usuario is None:
