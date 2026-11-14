@@ -11,6 +11,8 @@ from app.schemas.tope import TopeCreate, TopeResponse
 
 router = APIRouter(prefix="/topes", tags=["Topes Mensuales"])
 
+UMBRAL_ALERTA_PORCENTAJE = 80
+
 
 @router.put("", response_model=TopeResponse, status_code=status.HTTP_200_OK)
 def definir_tope(
@@ -66,7 +68,7 @@ def definir_tope(
 
     porcentaje_raw = (float(total_gastado) / float(payload.monto_tope)) * 100
     porcentaje = floor(porcentaje_raw)
-    alerta_80 = porcentaje >= 80
+    alerta_80 = porcentaje >= UMBRAL_ALERTA_PORCENTAJE
     mensaje_alerta = (
         f"Llevas el {porcentaje} % de tu tope en {nombre_categoria}"
         if alerta_80
@@ -122,7 +124,7 @@ def listar_topes(
 
         porcentaje_raw = (float(total_gastado) / float(tope.monto_tope)) * 100
         porcentaje_entero = floor(porcentaje_raw)
-        alerta_80 = porcentaje_entero >= 80
+        alerta_80 = porcentaje_entero >= UMBRAL_ALERTA_PORCENTAJE
         mensaje_alerta = (
             f"Llevas el {porcentaje_entero} % de tu tope en {nombre_categoria}"
             if alerta_80
