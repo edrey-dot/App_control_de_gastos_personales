@@ -29,6 +29,9 @@ def registrar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Con estado 409 si el correo ya está registrado.
         SQLAlchemyError: Si falla una operación de base de datos.
+        Errores de Passlib o bcrypt: Si falla el cálculo del hash de contraseña.
+        FastAPI responde 422 antes de llamar esta función si el cuerpo es
+        inválido.
     """
     usuario_existente = (
         db.query(Usuario).filter(Usuario.correo == payload.correo).first()
@@ -64,7 +67,8 @@ def iniciar_sesion(payload: LoginRequest, db: Session = Depends(get_db)):
         HTTPException: Con estado 401 si el usuario no existe o la contraseña
             no coincide.
         SQLAlchemyError: Si falla la consulta de base de datos. Los errores de
-            PyJWT al firmar el token no se capturan y se propagan.
+            Passlib al verificar el hash y de PyJWT al firmar el token no se
+            capturan y se propagan.
     """
     usuario = (
         db.query(Usuario)
