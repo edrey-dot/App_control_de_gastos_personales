@@ -1,7 +1,8 @@
 """Pruebas de seguridad y abuso (H-04).
 
 Verifica controles de acceso, aislamiento entre usuarios (BOLA/IDOR),
-rechazo de solicitudes no autenticadas y protección contra inyección de campos sensibles.
+rechazo de solicitudes no autenticadas y protección contra inyección de campos
+sensibles.
 """
 
 from app.main import app
