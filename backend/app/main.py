@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api import auth, categorias, gastos, recibos, topes
+from app.core.config import CORS_ORIGINS
 from app.db.models import Categoria
 from app.db.session import Base, SessionLocal, engine
 
@@ -44,13 +45,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configuración de CORS para permitir la conexión desde Ionic / Angular
+# H-02: Configuración restringida de CORS para prevenir orígenes arbitrarios
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
     expose_headers=["Location"],
 )
 
