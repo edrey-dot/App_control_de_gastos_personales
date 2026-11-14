@@ -64,7 +64,7 @@ class GeminiReceiptReader(BaseReceiptReader):
     ) -> LecturaResponse:
         url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-1.5-flash:generateContent?key={self.api_key}"
+            "gemini-1.5-flash:generateContent"
         )
         encoded_image = base64.b64encode(contenido_imagen).decode("utf-8")
 
@@ -94,7 +94,7 @@ class GeminiReceiptReader(BaseReceiptReader):
             "generationConfig": {"response_mime_type": "application/json"},
         }
 
-        # H-03 & H-06: Manejo explícito de timeouts y fallos de conexión HTTP
+        # Manejo explícito de timeouts y fallos de conexión HTTP
         try:
             async with httpx.AsyncClient(timeout=TIMEOUT_IA_SEGUNDOS) as client:
                 headers = {"x-goog-api-key": self.api_key}
