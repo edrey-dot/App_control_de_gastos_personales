@@ -128,5 +128,5 @@ del backend.
 
 ## 8. Autor y licencia
 
-- Autor: **[COMPLETAR POR MÍ]**
-- Licencia: **[COMPLETAR POR MÍ]**
+- Autor: Yeison Edrey Rodriguez Hernandez
+- Licencia: MIT © 2026 Yeison Edrey Rodriguez Hernandez. Uso libre con atribución al autor.
