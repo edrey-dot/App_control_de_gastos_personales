@@ -42,3 +42,63 @@ El asistente de IA me ayudó a estructurar el flujo de trabajo, la aruquitectura
 fueron fundamentales para garantizar que el mensaje de error fuera idéntico al solicitado por el cliente y para
 atrapar casos de borde como el día de mañana. En una próxima ocasión, definiría desde el inicio la estructura de
 carpetas y repositorios para evitar reorganizaciones entre el frontend y el backend durante el desarrollo."
+
+---
+
+## Entradas de la Semana 6 — 2026-11-14
+
+### Entrada 4: Revisión de seguridad asistida por IA
+
+- **Qué pedí:** Verificar los commits H-01, H-02 y H-03, revisar `.env.example`
+  y las configuraciones de Ruff, y evaluar el uso de la clave de Gemini en la
+  URL.
+- **Qué respondió la IA:** Los cambios de clave JWT obligatoria, CORS limitado y
+  manejo de errores de red se observaron en los diffs. También encontró que
+  `.env.example` aún contenía un valor de demostración y que la clave Gemini
+  seguía en `?key=` pese a enviarse también en un encabezado.
+- **Qué verifiqué:** Comparé `git show` de los tres commits con los archivos
+  actuales; confirmé la plantilla y comparé ambas configuraciones Ruff. Mi
+  verificación personal: **[COMPLETAR POR MÍ]**.
+- **Qué decidí:** Corregir la plantilla, mover la clave Gemini solo al
+  encabezado y probar el cambio sin editar pruebas existentes.
+
+### Entrada 5: Envío seguro de clave Gemini (H-06)
+
+- **Qué pedí:** Confirmar si Gemini acepta la API key en `x-goog-api-key` y
+  corregir la URL si era compatible.
+- **Qué respondió la IA:** La documentación oficial de Gemini muestra ese
+  encabezado para REST; propuso retirar el parámetro `?key=` y probar la
+  solicitud con un cliente HTTP simulado.
+- **Qué verifiqué:** Revisé el código y la documentación, añadí
+  `backend/tests/test_receipt_reader_auth.py` y ejecuté la prueba nueva
+  (3 pasadas, incluidas timeout y fallo de conexión) y la suite backend con
+  base temporal limpia (15 pasadas). No hice una llamada real a Google ni usé
+  una clave real. Mi verificación personal: **[COMPLETAR POR MÍ]**.
+- **Qué decidí:** Aceptar el cambio, conservando el comportamiento de respuesta
+  y registrándolo en el commit `db9f6d3`.
+
+### Entrada 6: Trabajo del agente Antigravity CLI
+
+- **Qué pedí al agente:** **[COMPLETAR POR MÍ: pegar la solicitud real enviada
+  a Antigravity CLI]**.
+- **Qué respondió el agente:** **[COMPLETAR POR MÍ: resumir su respuesta real;
+  no inferirla solo a partir de los commits]**.
+- **Qué verifiqué:** La rama actual es `semana6-revision`. Revisé con `git show`
+  los diffs de `ade50ff`, `e6a41d6` y `9ef3d8a`, los contrasté con el código
+  vigente y ejecuté las comprobaciones indicadas en el informe. Mi verificación
+  personal del diff: **[COMPLETAR POR MÍ]**.
+- **Qué decidí:** **[COMPLETAR POR MÍ: indicar qué sugerencias del agente
+  acepté o rechacé y por qué]**.
+
+### Entrada 7: Refactor de umbral de alerta
+
+- **Qué pedí:** Revisar el backend en busca de valores mágicos y refactors
+  pequeños sin alterar el comportamiento.
+- **Qué respondió la IA:** Detectó que el umbral `80` estaba repetido en las
+  dos rutas de topes; sugirió nombrarlo como constante. También observó una
+  fórmula parecida de porcentaje, pero las respuestas usan precisión distinta.
+- **Qué verifiqué:** Comparé el diff para confirmar que solo se reemplazó el
+  literal por `UMBRAL_ALERTA_PORCENTAJE` y ejecuté Ruff y las pruebas backend.
+  Mi verificación personal: **[COMPLETAR POR MÍ]**.
+- **Qué decidí:** Aceptar el cambio mínimo en el commit `7633004`; no extraer la
+  fórmula para no arriesgar la diferencia de redondeo entre endpoints.

@@ -1,82 +1,132 @@
-# Control de Gastos Personales con Escáner de Facturas
+# Control de gastos personales
 
-Aplicación para la gestión y control de gastos personales mediante el escaneo de facturas y recibos físicos, desarrollada con Ionic + Angular para el frontend y FastAPI (Python) para el backend con PostgreSQL.
+## 1. ¿Qué es?
 
----
+Aplicación para registrar gastos personales, definir topes mensuales por
+categoría y consultar resúmenes. El frontend está hecho con Ionic y Angular; el
+backend ofrece una API FastAPI con autenticación JWT y base de datos SQLite por
+defecto. La lectura de recibos funciona en modo simulado o mediante Gemini.
 
-## Funcionalidad de la semana 5
+## 2. Requisitos
 
-Esta sección documenta la implementación guiada por TDD (Test-Driven Development) de las funciones puras del dominio para las historias de usuario de prioridad MUST, cumpliendo con la entrega de la **Semana 5**.
+- Windows 10/11 (los comandos de esta guía usan PowerShell).
+- Python 3.10.
+- Node.js 24.15 o posterior de la rama 24 y npm 8 o posterior (Angular CLI
+  22.2.4 admite Node 22.22.3, 24.15 o versiones 26+).
+- Git para clonar el repositorio.
 
-### HU-02: Confirmar en vista previa antes de guardar (Validación de fecha)
+## 3. Instalación
 
-#### 1. Historia de usuario y criterios de aceptación
-- **ID:** `HU-02` (Prioridad: MUST)
-- **Historia:** Como usuario, quiero confirmar los datos en una vista previa antes de guardar el gasto para evitar guardar datos mal leídos.
-- **Criterio de aceptación (Escenario 2 - Error / Fecha futura):**
-  - **Dado que** hoy es `24/10/2026` y la vista previa muestra la fecha `30/12/2026`,
-  - **cuando** toco "Guardar",
-  - **entonces** la app marca la fecha en rojo, muestra `"La fecha no puede ser posterior a hoy"` y no guarda el gasto.
-- **Criterio de aceptación (Escenario 1 - Confirmar fecha válida):**
-  - **Dado que** la vista previa muestra comercio "Supermercado Central", fecha `15/10/2026` y monto `$85.000`,
-  - **cuando** toco "Guardar",
-  - **entonces** el gasto aparece en la lista del `15/10/2026` con `$85.000`.
+Clona el repositorio y abre PowerShell en su carpeta `App_gastos`. Continúa con:
 
----
-
-#### 2. Contrato de la función
-
-- **Ubicación del módulo:** `backend/app/domain/validaciones.py`
-- **Nombre de la función:** `validar_fecha_gasto`
-- **Firma:**
-  ```python
-  from datetime import date
-  from typing import Optional
-
-  def validar_fecha_gasto(fecha: date, hoy: Optional[date] = None) -> date:
-  ```
-- **Parámetros:**
-  - `fecha` (`datetime.date`): Fecha del gasto que se desea registrar o validar.
-  - `hoy` (`Optional[datetime.date]`, por defecto `None`): Fecha de referencia que representa el día actual. Si no se suministra (`None`), la función toma automáticamente `date.today()`.
-- **Retorno:**
-  - `datetime.date`: Devuelve el mismo objeto `fecha` recibido si es válido (es decir, si `fecha <= hoy`).
-- **Excepciones lanzadas:**
-  - `ValueError`: Si `fecha > hoy`, lanza un `ValueError` con el mensaje exacto:
-    `"La fecha no puede ser posterior a hoy"`.
-  - `TypeError`: Si `fecha` no es una instancia de `date` o `hoy` no es `date` ni `None`.
-- **Supuestos:**
-  - La función pertenece a la capa de dominio pura: no realiza llamadas a red, base de datos ni servicios externos.
-  - El parámetro `hoy` permite inyectar fechas específicas en pruebas automatizadas de manera determinística (por ejemplo, simular el día `24/10/2026`).
-  - Un gasto puede ser del día de hoy (`fecha == hoy`) o de cualquier fecha en el pasado (`fecha < hoy`).
-- **Casos límite:**
-  - `fecha == hoy`: La fecha del gasto es exactamente hoy. Debe ser admitida como válida.
-  - `fecha == hoy + 1 día`: La fecha es inmediatamente posterior (mañana). Debe lanzar `ValueError`.
-  - `fecha` en el pasado lejano: Es válida cronológicamente (menor a hoy).
-  - Fechas de fin de mes y años bisiestos (ej. 29 de febrero): Se validan correctamente respetando el calendario provisto por `datetime.date`.
-- **Ejemplos de entrada y salida:**
-  1. **Ejemplo 1 (Gasto en fecha pasada):**
-     - Entrada: `fecha = date(2026, 10, 15)`, `hoy = date(2026, 10, 24)`
-     - Salida: `date(2026, 10, 15)`
-  2. **Ejemplo 2 (Gasto con fecha de hoy - Caso límite):**
-     - Entrada: `fecha = date(2026, 10, 24)`, `hoy = date(2026, 10, 24)`
-     - Salida: `date(2026, 10, 24)`
-  3. **Ejemplo 3 (Gasto con fecha futura - Caso de error):**
-     - Entrada: `fecha = date(2026, 12, 30)`, `hoy = date(2026, 10, 24)`
-     - Salida: Lanza `ValueError("La fecha no puede ser posterior a hoy")`
-  4. **Ejemplo 4 (Uso con valor por defecto de `hoy`):**
-     - Entrada: `fecha = date(2020, 1, 1)` (sin pasar `hoy`)
-     - Salida: `date(2020, 1, 1)` (asumiendo que la fecha actual es posterior al 2020)
-
----
-
-#### 3. Cómo ejecutar las pruebas
-
-Desde la carpeta `backend/`:
-
-```bash
-# Ejecutar todas las pruebas con pytest
-pytest
-
-# O ejecutando detalladamente las pruebas de dominio:
-pytest tests/test_validaciones.py -v
+```powershell
+Set-Location .\backend
 ```
+
+Configura el backend:
+
+```powershell
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install ruff==0.17.5 pip-audit==2.10.1
+Copy-Item .env.example .env
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+notepad .env
+```
+
+Copia el valor generado en `SECRET_KEY` dentro de `.env`. No compartas ese
+archivo ni subas claves al repositorio. Para uso local deja `AI_PROVIDER=mock`;
+no se necesita una clave de Gemini.
+
+Configura el frontend desde la raíz del proyecto:
+
+```powershell
+Set-Location ..
+npm ci
+```
+
+## 4. Ejecución
+
+Abre dos terminales de PowerShell.
+
+En la primera, desde `App_gastos\backend`:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --reload
+```
+
+La API queda disponible en `http://localhost:8000` y su documentación
+interactiva en `http://localhost:8000/docs`.
+
+En la segunda, desde la raíz `App_gastos`:
+
+```powershell
+npm start
+```
+
+Abre `http://localhost:4200`. Para habilitar la lectura real de recibos, define
+`AI_PROVIDER=gemini` y `GEMINI_API_KEY` en el `.env` del backend. La clave se
+mantiene en el servidor; nunca la configures en el frontend.
+
+## 5. Pruebas y verificaciones
+
+Desde `App_gastos\backend`, activa el entorno virtual y ejecuta:
+
+```powershell
+Remove-Item .\gastos.db -ErrorAction SilentlyContinue
+python -m pytest -q
+ruff check .
+pip-audit -r requirements.txt
+```
+
+**Advertencia H-07:** las pruebas comparten `backend\gastos.db` y dejan datos
+persistidos. Hasta aislar la base de datos de pruebas, elimina ese archivo antes
+de cada ejecución de `pytest`. Esto borra los datos locales guardados en esa
+base; respáldala primero si necesitas conservarlos. No se modificó ninguna
+prueba existente para ocultar este problema.
+
+Para las pruebas unitarias del frontend, desde la raíz:
+
+```powershell
+npm run test:unit
+```
+
+En la revisión del 2026-11-14 este comando compiló y reportó 2 pruebas
+aprobadas, pero Vitest terminó con un error asíncrono `NG04002` al navegar a
+`/login` desde `src/app/home/home.page.spec.ts`. Queda pendiente; no se modificó
+esa prueba existente.
+
+## 6. Estructura del proyecto
+
+```text
+App_gastos/
+├── backend/
+│   ├── app/api/          # Endpoints FastAPI
+│   ├── app/core/         # Configuración y seguridad
+│   ├── app/db/           # Modelos y sesión SQLAlchemy
+│   ├── app/schemas/      # Esquemas Pydantic
+│   ├── app/services/     # Lectura de recibos
+│   └── tests/            # Pruebas del backend
+├── src/app/              # Páginas, servicios y componentes Ionic/Angular
+├── e2e/                  # Pruebas end-to-end del frontend
+├── README.md
+└── bitacora_ia.md
+```
+
+## 7. Uso de inteligencia artificial
+
+La aplicación ofrece un lector simulado para desarrollo y un lector Gemini
+opcional. En modo Gemini, el backend envía la imagen del recibo a la API de
+Google para extraer comercio, fecha y monto; no guarda la imagen en la base de
+datos. Revisa y confirma los datos antes de registrar el gasto. No cargues
+recibos con información que no quieras compartir con el proveedor externo.
+Protege `GEMINI_API_KEY` como una contraseña y mantenla únicamente en el entorno
+del backend.
+
+## 8. Autor y licencia
+
+- Autor: **[COMPLETAR POR MÍ]**
+- Licencia: **[COMPLETAR POR MÍ]**
