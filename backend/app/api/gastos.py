@@ -26,9 +26,20 @@ def crear_gasto(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
 ):
-    """HU-02, HU-03, HU-04, HU-09:
-    Crea un nuevo gasto. Valida que la categoría exista.
-    Retorna 201 y cabecera Location: /gastos/{id_gasto}.
+    """Crea y persiste un gasto del usuario autenticado.
+
+    Args:
+        payload: Datos validados del gasto, incluida su categoría.
+        response: Respuesta HTTP donde se establece la cabecera ``Location``.
+        db: Sesión SQLAlchemy usada para consultar y guardar el gasto.
+        usuario_actual: Usuario autenticado propietario del nuevo gasto.
+
+    Returns:
+        La entidad ``Gasto`` creada, serializada como ``GastoResponse``.
+
+    Raises:
+        HTTPException: Con estado 422 si la categoría no existe.
+        SQLAlchemyError: Si falla una operación de base de datos.
     """
     categoria = (
         db.query(Categoria)
@@ -62,8 +73,19 @@ def listar_gastos(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
 ):
-    """HU-02 Escenario 1: Listar gastos del usuario autenticado
-    (filtrables por fecha).
+    """Lista los gastos del usuario autenticado, opcionalmente por fecha.
+
+    Args:
+        fecha: Filtro opcional en formato ISO ``AAAA-MM-DD``.
+        db: Sesión SQLAlchemy usada para consultar los gastos.
+        usuario_actual: Usuario autenticado cuyos gastos se listan.
+
+    Returns:
+        Gastos ordenados por fecha e identificador descendentes.
+
+    Raises:
+        HTTPException: Con estado 400 si ``fecha`` no es una fecha ISO válida.
+        SQLAlchemyError: Si falla la consulta de base de datos.
     """
     consulta = db.query(Gasto).filter(Gasto.id_usuario == usuario_actual.id_usuario)
 
@@ -86,8 +108,20 @@ def obtener_gasto(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
 ):
-    """Obtener un gasto específico.
-    RNF-06: Si pertenece a otro usuario o no existe, retorna 404.
+    """Obtiene un gasto que pertenece al usuario autenticado.
+
+    Args:
+        id_gasto: Identificador del gasto solicitado.
+        db: Sesión SQLAlchemy usada para buscar el gasto.
+        usuario_actual: Usuario autenticado que debe ser propietario del gasto.
+
+    Returns:
+        La entidad ``Gasto`` encontrada, serializada como ``GastoResponse``.
+
+    Raises:
+        HTTPException: Con estado 404 si el gasto no existe o pertenece a otro
+            usuario.
+        SQLAlchemyError: Si falla la consulta de base de datos.
     """
     gasto = (
         db.query(Gasto)
@@ -111,7 +145,23 @@ def obtener_resumen_mensual(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
 ):
-    """HU-06: Resumen mensual para gráfico de pastel con porcentajes por categoría."""
+    """Calcula los totales y porcentajes por categoría de un mes.
+
+    Args:
+        anio: Año del resumen solicitado.
+        mes: Mes del resumen, entre 1 y 12.
+        db: Sesión SQLAlchemy usada para consultar los gastos.
+        usuario_actual: Usuario autenticado cuyos gastos se agregan.
+
+    Returns:
+        Un ``ResumenMensualResponse`` con los totales del mes; si no hay gastos,
+        contiene una lista vacía y un mensaje informativo.
+
+    Raises:
+        SQLAlchemyError: Si falla la consulta de base de datos. FastAPI responde
+            422 antes de llamar esta función si falta ``anio`` o ``mes`` está
+            fuera de rango.
+    """
     gastos_mes = (
         db.query(
             Categoria.id_categoria,

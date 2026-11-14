@@ -11,8 +11,19 @@ TIMEOUT_IA_SEGUNDOS: float = 4.0
 
 
 def normalizar_monto_colombiano(valor_str: str) -> float | None:
-    """HU-01: Normaliza texto de monto colombiano a número
-    (ej: '$85.000' -> 85000.0).
+    """Convierte un monto colombiano escrito como texto a un número.
+
+    Args:
+        valor_str: Texto del monto, con símbolos opcionales y separadores
+            colombianos (por ejemplo, ``"$85.000"``).
+
+    Returns:
+        El monto como ``float``; ``None`` si el texto está vacío o no se puede
+        convertir a número.
+
+    Raises:
+        AttributeError: Si el argumento no es una cadena y no implementa
+            ``replace``.
     """
     if not valor_str:
         return None
@@ -35,6 +46,20 @@ class BaseReceiptReader(ABC):
     async def leer_recibo(
         self, contenido_imagen: bytes, content_type: str
     ) -> LecturaResponse:
+        """Lee los datos de un recibo; las subclases implementan la lectura.
+
+        Args:
+            contenido_imagen: Bytes de la imagen que se debe procesar.
+            content_type: Tipo MIME de la imagen.
+
+        Returns:
+            ``None`` en este cuerpo abstracto; las implementaciones concretas
+            devuelven un ``LecturaResponse``.
+
+        Raises:
+            No lanza excepciones explícitamente. La clase base no se puede
+            instanciar mientras este método siga siendo abstracto.
+        """
         pass
 
 
@@ -44,6 +69,18 @@ class MockReceiptReader(BaseReceiptReader):
     async def leer_recibo(
         self, contenido_imagen: bytes, content_type: str
     ) -> LecturaResponse:
+        """Devuelve datos de recibo simulados sin usar la imagen ni llamar a red.
+
+        Args:
+            contenido_imagen: Imagen recibida; no se procesa en el lector mock.
+            content_type: Tipo MIME recibido; no se procesa en el lector mock.
+
+        Returns:
+            Un ``LecturaResponse`` con valores de ejemplo fijos.
+
+        Raises:
+            No lanza excepciones explícitamente.
+        """
         # Devuelve datos realistas simulados según el escenario de la HU-01
         return LecturaResponse(
             comercio="Supermercado Central",
@@ -62,6 +99,23 @@ class GeminiReceiptReader(BaseReceiptReader):
     async def leer_recibo(
         self, contenido_imagen: bytes, content_type: str
     ) -> LecturaResponse:
+        """Envía la imagen a Gemini y transforma su respuesta en datos de recibo.
+
+        Args:
+            contenido_imagen: Bytes de la imagen del recibo.
+            content_type: Tipo MIME usado por Gemini para interpretar la imagen.
+
+        Returns:
+            Un ``LecturaResponse`` con los datos extraídos o un mensaje de error
+            controlado para respuestas HTTP no exitosas, fallos de red,
+            timeout o respuestas que no se pueden interpretar.
+
+        Raises:
+            No propaga ``httpx.TimeoutException``, ``httpx.RequestError``,
+            ``json.JSONDecodeError``, ``KeyError`` ni ``ValueError``; los
+            convierte en respuestas con mensaje. Otros errores no capturados
+            se propagan.
+        """
         url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
             "gemini-1.5-flash:generateContent"
@@ -132,6 +186,15 @@ class GeminiReceiptReader(BaseReceiptReader):
 
 
 def obtener_receipt_reader() -> BaseReceiptReader:
+    """Selecciona el lector Gemini configurado o el lector simulado.
+
+    Returns:
+        ``GeminiReceiptReader`` si ``AI_PROVIDER`` es ``"gemini"`` y hay una
+        clave configurada; en los demás casos, ``MockReceiptReader``.
+
+    Raises:
+        No lanza excepciones explícitamente.
+    """
     if AI_PROVIDER == "gemini" and GEMINI_API_KEY:
         return GeminiReceiptReader(GEMINI_API_KEY)
     return MockReceiptReader()

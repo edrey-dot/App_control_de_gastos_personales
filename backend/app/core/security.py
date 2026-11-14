@@ -15,17 +15,55 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/sesiones")
 
 
 def verificar_contrasena(contrasena_plana: str, contrasena_hash: str) -> bool:
-    """Verifica si la contraseña plana coincide con el hash almacenado."""
+    """Compara una contraseña plana con un hash almacenado.
+
+    Args:
+        contrasena_plana: Contraseña ingresada por el usuario.
+        contrasena_hash: Hash bcrypt almacenado para la cuenta.
+
+    Returns:
+        ``True`` si la contraseña coincide; de lo contrario, ``False``.
+
+    Raises:
+        passlib.exc.UnknownHashError: Si el hash almacenado usa un formato o
+            esquema que Passlib no reconoce. Otros errores de Passlib/bcrypt
+            tampoco se capturan.
+    """
     return pwd_context.verify(contrasena_plana, contrasena_hash)
 
 
 def obtener_contrasena_hash(contrasena: str) -> str:
-    """Genera el hash seguro (bcrypt) de una contraseña."""
+    """Genera un hash bcrypt de la contraseña.
+
+    Args:
+        contrasena: Contraseña plana que se debe proteger.
+
+    Returns:
+        El hash bcrypt de la contraseña, con sal generada por Passlib.
+
+    Raises:
+        Errores de Passlib o bcrypt: Si el cálculo del hash falla, las
+            excepciones correspondientes se propagan al llamador.
+    """
     return pwd_context.hash(contrasena)
 
 
 def crear_token_acceso(data: dict, expires_delta: timedelta | None = None) -> str:
-    """Crea un token JWT firmado con fecha de expiración."""
+    """Firma un token JWT con los datos y la fecha de expiración.
+
+    Args:
+        data: Claims que se incluirán en el token; no se modifica el diccionario
+            recibido.
+        expires_delta: Duración opcional del token. Si se omite, se usa la
+            duración configurada en ``ACCESS_TOKEN_EXPIRE_MINUTES``.
+
+    Returns:
+        El token JWT firmado como cadena.
+
+    Raises:
+        jwt.PyJWTError: Si PyJWT no puede codificar o firmar los claims.
+        TypeError: Si los claims no se pueden serializar a JSON.
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -41,8 +79,19 @@ def obtener_usuario_actual(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> Usuario:
-    """Dependencia para validar el token JWT y obtener el usuario autenticado
-    (401 si falla).
+    """Valida el JWT y obtiene el usuario autenticado de la base de datos.
+
+    Args:
+        token: JWT proporcionado mediante el esquema Bearer de OAuth2.
+        db: Sesión SQLAlchemy usada para buscar al usuario del token.
+
+    Returns:
+        El usuario cuyo correo coincide con el claim ``sub`` del JWT.
+
+    Raises:
+        HTTPException: Con estado 401 si el JWT es inválido, expiró, no contiene
+            ``sub`` o el usuario no existe.
+        SQLAlchemyError: Si falla la consulta de base de datos.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

@@ -17,7 +17,19 @@ router = APIRouter(tags=["Autenticación"])
     "/usuarios", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED
 )
 def registrar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
-    """HU-10: Registro de nuevo usuario (201 al crear, 409 si el correo ya existe)."""
+    """Registra un usuario y almacena el hash de su contraseña.
+
+    Args:
+        payload: Correo y contraseña validados para el registro.
+        db: Sesión SQLAlchemy usada para buscar y guardar el usuario.
+
+    Returns:
+        La entidad ``Usuario`` creada, serializada sin su hash de contraseña.
+
+    Raises:
+        HTTPException: Con estado 409 si el correo ya está registrado.
+        SQLAlchemyError: Si falla una operación de base de datos.
+    """
     usuario_existente = (
         db.query(Usuario).filter(Usuario.correo == payload.correo).first()
     )
@@ -39,8 +51,20 @@ def registrar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
 
 @router.post("/sesiones", response_model=Token)
 def iniciar_sesion(payload: LoginRequest, db: Session = Depends(get_db)):
-    """HU-10: Inicio de sesión (200 con JWT,
-    401 si las credenciales son incorrectas).
+    """Autentica al usuario y crea un token de acceso JWT.
+
+    Args:
+        payload: Correo y contraseña enviados para iniciar sesión.
+        db: Sesión SQLAlchemy usada para buscar el usuario.
+
+    Returns:
+        Un ``Token`` con el JWT de acceso y el tipo ``bearer``.
+
+    Raises:
+        HTTPException: Con estado 401 si el usuario no existe o la contraseña
+            no coincide.
+        SQLAlchemyError: Si falla la consulta de base de datos. Los errores de
+            PyJWT al firmar el token no se capturan y se propagan.
     """
     usuario = (
         db.query(Usuario)

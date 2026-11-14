@@ -20,7 +20,20 @@ def definir_tope(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
 ):
-    """HU-07: Definir o actualizar tope mensual para una categoría."""
+    """Crea o actualiza el tope mensual de una categoría del usuario.
+
+    Args:
+        payload: Categoría, año, mes y monto del tope validados.
+        db: Sesión SQLAlchemy usada para consultar y guardar el tope.
+        usuario_actual: Usuario autenticado propietario del tope.
+
+    Returns:
+        Un ``TopeResponse`` con el monto gastado, porcentaje y alerta calculados.
+
+    Raises:
+        SQLAlchemyError: Si falla una operación de base de datos. FastAPI
+            responde 422 antes de llamar esta función si el cuerpo no es válido.
+    """
     tope = (
         db.query(TopeMensual)
         .filter(
@@ -95,8 +108,21 @@ def listar_topes(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
 ):
-    """HU-07 & HU-08: Listar todos los topes del mes
-    con sus porcentajes y alertas calculadas.
+    """Lista los topes del usuario para un mes con gasto y alerta calculados.
+
+    Args:
+        anio: Año consultado.
+        mes: Mes consultado, entre 1 y 12.
+        db: Sesión SQLAlchemy usada para consultar topes y gastos.
+        usuario_actual: Usuario autenticado cuyos topes se listan.
+
+    Returns:
+        Una lista de ``TopeResponse`` con totales y alertas por categoría.
+
+    Raises:
+        SQLAlchemyError: Si falla una consulta de base de datos. FastAPI
+            responde 422 antes de llamar esta función si falta ``anio`` o
+            ``mes`` está fuera de rango.
     """
     topes = (
         db.query(TopeMensual, Categoria.nombre)
