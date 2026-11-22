@@ -98,8 +98,8 @@ async def custom_validation_exception_handler(
         # Si el error es de fecha, monto o categoría, retornar 422 con el mensaje exacto
         if msg in [
             "La fecha no puede ser posterior a hoy",
-            "El monto debe ser un numero mayor a 0",
-            "Elige una categoria",
+            "El monto debe ser un número mayor a 0",
+            "Elige una categoría",
             "El tope debe ser mayor a $0",
             "El comercio es obligatorio",
         ]:

@@ -69,3 +69,50 @@ carpetas y repositorios para evitar reorganizaciones entre el frontend y el back
 
 - **Qué pedí:** Confirmar si Gemini acepta la API key en `x-goog-api-key` y
   corregir la URL si
+
+---
+
+## Entradas de la Semana 7 — 2026-11-22
+
+### Entrada 6: Diseño de reglas y casos de prueba
+
+- **Qué pedí:** Seleccionar funciones del proyecto con reglas de negocio y
+  diseñar particiones, límites y una tabla de decisión desde las historias.
+- **Qué respondió la IA:** Propuso HU-02, HU-03, HU-04, HU-07 y HU-08 como
+  fuentes de casos, con HU-08 para las condiciones combinadas de tope y gasto.
+- **Qué verifiqué:** Comparé cada esperado con las historias que compartí.
+  Confirmé que la fecha igual a hoy, el 80 % exacto, el gasto menor al 80 % con
+  tope y el formato de otros porcentajes no estaban aclarados.
+- **Qué decidí:** Dejar esos casos como ambiguos, no asignarles un resultado
+  esperado y probar solo los escenarios respaldados por la historia.
+
+### Entrada 7: Generación, ejecución y auditoría de pruebas
+
+- **Qué pedí:** Generar pruebas pytest parametrizadas, ejecutarlas y comprobar
+  que detectaran fallos en las reglas.
+- **Qué respondió la IA:** Añadió casos para fecha, monto, categoría, tope y
+  alerta; incluyó comentarios por fila, `pytest.approx` en valores numéricos y
+  `pytest.raises` con `ValueError` en la validación directa de fecha.
+- **Qué verifiqué:** La primera ejecución encontró que el backend respondía
+  `numero` y `categoria` sin tilde, aunque HU-03 y HU-04 especifican las formas
+  con tilde. Se mantuvieron los esperados de las historias y se corrigieron los
+  mensajes en backend e interfaz. Después, `pytest -v` pasó con 33 pruebas y
+  Ruff pasó. Las tres mutaciones temporales fueron detectadas; tras restaurarlas
+  la suite volvió a pasar.
+- **Qué decidí:** Conservar los esperados originales y registrar en
+  `registro_pruebas.md` los fallos iniciales, la corrección y las pruebas de
+  sensibilidad.
+
+### Entrada 8: Datos sintéticos con fixture
+
+- **Qué pedí:** Preparar datos ficticios con casos de texto y valores límite,
+  sin usar información real.
+- **Qué respondió la IA:** Amplió el fixture local `contexto_sintetico` con
+  `Mercado Ñandú d'Oliva`, una cadena vacía, cero, `abc` y el monto válido
+  $85.000. El correo se genera de forma única bajo `@prueba.local`.
+- **Qué verifiqué:** Las pruebas usan la base SQLite temporal configurada para
+  pytest y las categorías de prueba; no utilizan las bases locales ni datos de
+  personas reales o familiares. `pytest -v` pasó con 33 pruebas.
+- **Qué decidí:** Usar los datos para las pruebas de API y documentar la cadena
+  vacía como dato sintético sin expectativa, porque las historias compartidas
+  no especifican el resultado de ese caso.

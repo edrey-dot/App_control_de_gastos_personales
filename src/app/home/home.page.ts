@@ -565,7 +565,7 @@ export class HomePage implements OnInit, OnDestroy {
   onMontoChange(event: CustomEvent<{ value?: string | number | null }>): void {
     const valor = Number(event.detail.value);
     if (!Number.isFinite(valor) || valor <= 0) {
-      this.errorMonto = 'El monto debe ser un numero mayor a 0';
+      this.errorMonto = 'El monto debe ser un número mayor a 0';
       this.previewMonto = this.montoAnteriorValido;
       return;
     }
@@ -585,10 +585,10 @@ export class HomePage implements OnInit, OnDestroy {
       this.errorComercio = 'El comercio es obligatorio';
     }
     if (!Number.isFinite(this.previewMonto) || this.previewMonto <= 0) {
-      this.errorMonto = 'El monto debe ser un numero mayor a 0';
+      this.errorMonto = 'El monto debe ser un número mayor a 0';
     }
     if (!this.previewIdCategoria || this.previewIdCategoria <= 0) {
-      this.errorCategoria = 'Elige una categoria';
+      this.errorCategoria = 'Elige una categoría';
     }
     if (this.errorComercio || this.errorMonto || this.errorCategoria) return;
 
@@ -718,7 +718,7 @@ export class HomePage implements OnInit, OnDestroy {
 
     this.errorTope = '';
     if (!this.nuevoTopeCategoriaId) {
-      this.errorTope = 'Elige una categoria';
+      this.errorTope = 'Elige una categoría';
       return;
     }
     if (!Number.isFinite(this.nuevoTopeMonto) || this.nuevoTopeMonto <= 0) {

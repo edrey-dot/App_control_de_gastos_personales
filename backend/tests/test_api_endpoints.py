@@ -89,7 +89,7 @@ def test_flujo_autenticacion_y_gastos():
         headers=headers,
     )
     assert resp_monto_cero.status_code == 422
-    assert resp_monto_cero.json()["detail"] == "El monto debe ser un numero mayor a 0"
+    assert resp_monto_cero.json()["detail"] == "El monto debe ser un número mayor a 0"
 
     # 8. Rechazar fecha futura con mensaje exacto (HU-02)
     resp_fecha_futura = client.post(
@@ -116,7 +116,7 @@ def test_flujo_autenticacion_y_gastos():
         headers=headers,
     )
     assert resp_sin_categoria.status_code == 422
-    assert resp_sin_categoria.json()["detail"] == "Elige una categoria"
+    assert resp_sin_categoria.json()["detail"] == "Elige una categoría"
 
     resp_sin_comercio = client.post(
         "/gastos",

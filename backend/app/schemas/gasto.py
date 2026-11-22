@@ -32,7 +32,7 @@ class GastoCreate(BaseModel):
     def validar_monto(cls, v: float) -> float:
         # HU-03: monto debe ser mayor a 0
         if v <= 0:
-            raise ValueError("El monto debe ser un numero mayor a 0")
+            raise ValueError("El monto debe ser un número mayor a 0")
         return round(float(v), 2)
 
     @field_validator("id_categoria")
@@ -40,7 +40,7 @@ class GastoCreate(BaseModel):
     def validar_categoria(cls, v: int) -> int:
         # HU-04: categoría obligatoria
         if not v or v <= 0:
-            raise ValueError("Elige una categoria")
+            raise ValueError("Elige una categoría")
         return v
 
 

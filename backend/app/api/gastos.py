@@ -49,7 +49,7 @@ def crear_gasto(
     if not categoria:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Elige una categoria",
+            detail="Elige una categoría",
         )
 
     nuevo_gasto = Gasto(
