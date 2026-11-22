@@ -1,6 +1,16 @@
 <ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-title class="ion-text-center">Control de Gastos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        fill="clear"
+        size="small"
+        (click)="alternarTema()"
+        [attr.aria-label]="modoOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+      >
+        <ion-icon [name]="modoOscuro ? 'sunny-outline' : 'moon-outline'" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -22,33 +32,87 @@
 
     <ion-card class="auth-card">
       <ion-card-header>
-        <ion-card-title>
-          {{ modo === 'login' ? 'Ingresa a tu cuenta' : 'Crea tu cuenta' }}
-        </ion-card-title>
+        <ion-card-title> {{ modo === 'login' ? 'Ingresa a tu cuenta' : 'Crea tu cuenta' }} </ion-card-title>
       </ion-card-header>
 
       <ion-card-content>
         <form (ngSubmit)="onSubmit()">
+          @if (modo === 'registro') {
           <ion-item fill="outline" class="form-item">
-            <ion-label position="floating">Correo electrónico</ion-label>
-            <ion-input type="email" [(ngModel)]="correo" name="correo" required></ion-input>
+            <ion-label position="floating">Nombre para mostrar</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="nombreUsuario"
+              name="nombreUsuario"
+              autocomplete="nickname"
+              minlength="2"
+              maxlength="50"
+              required
+            ></ion-input>
           </ion-item>
 
           <ion-item fill="outline" class="form-item ion-margin-top">
+            <ion-label position="floating">Celular</ion-label>
+            <ion-input
+              type="tel"
+              [(ngModel)]="telefono"
+              name="telefono"
+              autocomplete="tel"
+              inputmode="tel"
+              placeholder="3001234567 o +57 3001234567"
+              required
+            ></ion-input>
+          </ion-item>
+          <p class="phone-note">Usarás este número para iniciar sesión; no enviamos SMS de verificación.</p>
+          } @if (modo === 'login') {
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Correo o celular</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="identificador"
+              name="identificador"
+              autocomplete="username"
+              required
+            ></ion-input>
+          </ion-item>
+          } @else {
+          <ion-item fill="outline" class="form-item ion-margin-top">
+            <ion-label position="floating">Correo electrónico</ion-label>
+            <ion-input type="email" [(ngModel)]="correo" name="correo" autocomplete="email" required></ion-input>
+          </ion-item>
+          }
+
+          <ion-item fill="outline" class="form-item ion-margin-top">
             <ion-label position="floating">Contraseña</ion-label>
-            <ion-input type="password" [(ngModel)]="contrasena" name="contrasena" required></ion-input>
+            <ion-input
+              type="password"
+              [(ngModel)]="contrasena"
+              name="contrasena"
+              [autocomplete]="modo === 'registro' ? 'new-password' : 'current-password'"
+              required
+            ></ion-input>
           </ion-item>
 
-          <div *ngIf="mensajeError" class="error-banner ion-margin-top">
+          @if (mensajeError) {
+          <div class="error-banner ion-margin-top" role="alert">
             <ion-text color="danger">{{ mensajeError }}</ion-text>
           </div>
-
-          <div *ngIf="mensajeExito" class="success-banner ion-margin-top">
+          } @if (mensajeExito) {
+          <div class="success-banner ion-margin-top" role="status">
             <ion-text color="success">{{ mensajeExito }}</ion-text>
           </div>
+          }
 
-          <ion-button expand="block" type="submit" color="primary" class="ion-margin-top submit-btn">
-            {{ modo === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta' }}
+          <ion-button
+            expand="block"
+            type="submit"
+            color="primary"
+            class="ion-margin-top submit-btn"
+            [disabled]="enviando"
+          >
+            @if (enviando) {
+            <ion-spinner slot="start" name="crescent"></ion-spinner>
+            } {{ modo === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta' }}
           </ion-button>
         </form>
       </ion-card-content>

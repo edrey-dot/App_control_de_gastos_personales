@@ -83,3 +83,19 @@ Avisos no corregidos y justificación:
 | Frontend: `npm run test:unit` | Compila y reporta 2 pruebas aprobadas, pero termina con error asíncrono `NG04002` en `src/app/home/home.page.spec.ts`. No se modificó esa prueba existente. | Revisar la navegación a `/login` en el entorno de pruebas. |
 
 **Claves expuestas:** ver sección 1. No se detectaron claves reales de Gemini/OpenAI; el fallback JWT de H-01 se eliminó.
+
+## 5. Actualización de estado — 19/11/2026
+
+Los pendientes anteriores describen el estado de la revisión original; se
+actualizan aquí sin alterar el registro histórico:
+
+- **H-07 resuelto:** `backend/tests/conftest.py` configura una base SQLite
+  temporal para la suite. Verificación actual: `python -m pytest -q`, 19/19
+  pruebas aprobadas.
+- **Prueba unitaria de HomePage resuelta:** `npm run test:unit -- --watch=false`
+  aprobó 5/5 pruebas.
+- **Flujos de navegador:** `npm run test:e2e` aprobó 3/3 pruebas, incluyendo el
+  guardado offline en IndexedDB y la persistencia del tema.
+- **Build y lint focalizado:** `npm run build` y ESLint sobre los archivos
+  ajustados finalizaron correctamente. Angular muestra avisos de navegadores
+  antiguos en Browserslist; pytest muestra dos avisos deprecados de Starlette.

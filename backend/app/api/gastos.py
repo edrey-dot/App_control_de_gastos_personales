@@ -70,6 +70,8 @@ def crear_gasto(
 @router.get("/gastos", response_model=list[GastoResponse])
 def listar_gastos(
     fecha: str | None = Query(None, description="Fecha en formato AAAA-MM-DD"),
+    fecha_inicio: str | None = Query(None, description="Inicio del período AAAA-MM-DD"),
+    fecha_fin: str | None = Query(None, description="Fin del período AAAA-MM-DD"),
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
 ):
@@ -89,6 +91,12 @@ def listar_gastos(
     """
     consulta = db.query(Gasto).filter(Gasto.id_usuario == usuario_actual.id_usuario)
 
+    if fecha and (fecha_inicio or fecha_fin):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Use fecha o el rango fecha_inicio/fecha_fin, no ambos",
+        )
+
     if fecha:
         try:
             fecha_filtro = date.fromisoformat(fecha)
@@ -98,6 +106,28 @@ def listar_gastos(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Formato de fecha inválido. Utilice AAAA-MM-DD",
             ) from err
+
+    if bool(fecha_inicio) != bool(fecha_fin):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El rango requiere fecha_inicio y fecha_fin",
+        )
+
+    if fecha_inicio and fecha_fin:
+        try:
+            inicio = date.fromisoformat(fecha_inicio)
+            fin = date.fromisoformat(fecha_fin)
+        except ValueError as err:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de fecha inválido. Utilice AAAA-MM-DD",
+            ) from err
+        if inicio > fin:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="fecha_inicio no puede ser posterior a fecha_fin",
+            )
+        consulta = consulta.filter(Gasto.fecha >= inicio, Gasto.fecha <= fin)
 
     return consulta.order_by(Gasto.fecha.desc(), Gasto.id_gasto.desc()).all()
 
@@ -136,6 +166,30 @@ def obtener_gasto(
             status_code=status.HTTP_404_NOT_FOUND, detail="Gasto no encontrado"
         )
     return gasto
+
+
+@router.delete("/gastos/{id_gasto}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_gasto(
+    id_gasto: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+) -> Response:
+    gasto = (
+        db.query(Gasto)
+        .filter(
+            Gasto.id_gasto == id_gasto,
+            Gasto.id_usuario == usuario_actual.id_usuario,
+        )
+        .first()
+    )
+    if not gasto:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Gasto no encontrado"
+        )
+
+    db.delete(gasto)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/resumenes", response_model=ResumenMensualResponse)

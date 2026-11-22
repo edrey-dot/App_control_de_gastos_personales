@@ -7,12 +7,12 @@ from app.domain.validaciones import validar_fecha_gasto
 
 class GastoCreate(BaseModel):
     # R-03 / HU-09: Rechazar cualquier campo extra (nombre, tarjeta, direccion)
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_default=True)
 
-    comercio: str
+    comercio: str = ""
     fecha: date
     monto: float
-    id_categoria: int
+    id_categoria: int = 0
 
     @field_validator("comercio")
     @classmethod

@@ -4,6 +4,7 @@ from sqlalchemy import (
     Date,
     ForeignKey,
     Integer,
+    LargeBinary,
     Numeric,
     String,
 )
@@ -25,6 +26,26 @@ class Usuario(Base):
     topes = relationship(
         "TopeMensual", back_populates="usuario", cascade="all, delete-orphan"
     )
+    perfil = relationship(
+        "PerfilUsuario",
+        back_populates="usuario",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
+
+class PerfilUsuario(Base):
+    __tablename__ = "perfil_usuario"
+
+    id_usuario = Column(
+        Integer, ForeignKey("usuario.id_usuario"), primary_key=True
+    )
+    nombre_usuario = Column(String(50), nullable=False)
+    telefono = Column(String(10), unique=True, nullable=True, index=True)
+    foto_perfil = Column(LargeBinary, nullable=True)
+    tipo_foto_perfil = Column(String(20), nullable=True)
+
+    usuario = relationship("Usuario", back_populates="perfil")
 
 
 class Categoria(Base):

@@ -1,6 +1,8 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import type { Observable } from 'rxjs';
+import { tap } from 'rxjs';
+
 import { environment } from '../../environments/environment';
 
 export interface TokenResponse {
@@ -13,6 +15,13 @@ export interface UsuarioResponse {
   correo: string;
 }
 
+export interface UsuarioRegistro {
+  nombre_usuario: string;
+  telefono: string;
+  correo: string;
+  contrasena: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -21,17 +30,17 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   private readonly TOKEN_KEY = 'auth_token';
 
-  registrar(correo: string, contrasena: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/usuarios`, { correo, contrasena });
+  registrar(usuario: UsuarioRegistro): Observable<UsuarioResponse> {
+    return this.http.post<UsuarioResponse>(`${this.apiUrl}/usuarios`, usuario);
   }
 
-  iniciarSesion(correo: string, contrasena: string): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.apiUrl}/sesiones`, { correo, contrasena }).pipe(
+  iniciarSesion(identificador: string, contrasena: string): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/sesiones`, { identificador, contrasena }).pipe(
       tap((res) => {
         if (res && res.access_token) {
           localStorage.setItem(this.TOKEN_KEY, res.access_token);
         }
-      })
+      }),
     );
   }
 

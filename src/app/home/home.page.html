@@ -1,226 +1,495 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
-    <ion-title>Control de Gastos</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="cerrarSesion()" title="Cerrar sesión">
-        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
+  <ion-toolbar class="app-toolbar">
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-mark">G</span>
+        <span>Gastos<span class="brand-light">App</span></span>
+      </div>
 
-  <ion-toolbar color="primary">
-    <ion-segment [value]="segmentoActivo" (ionChange)="cambiarSegmento($event)" class="nav-segment">
-      <ion-segment-button value="gastos">
-        <ion-icon name="wallet-outline"></ion-icon>
-        <ion-label>Gastos</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="resumen">
-        <ion-icon name="pie-chart-outline"></ion-icon>
-        <ion-label>Resumen</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="topes">
-        <ion-icon name="warning-outline"></ion-icon>
-        <ion-label>Topes</ion-label>
-      </ion-segment-button>
-    </ion-segment>
+      <ion-segment [value]="segmentoActivo" (ionChange)="cambiarSegmento($event)" class="nav-segment">
+        <ion-segment-button value="gastos">
+          <ion-icon name="wallet-outline"></ion-icon>
+          <ion-label>Dashboard</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="resumen">
+          <ion-icon name="pie-chart-outline"></ion-icon>
+          <ion-label>Resumen</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="topes">
+          <ion-icon name="warning-outline"></ion-icon>
+          <ion-label>Topes</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <div class="header-search">
+        <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        <ion-input
+          [(ngModel)]="busquedaGastos"
+          placeholder="Buscar gastos o categorías..."
+          aria-label="Buscar gastos o categorías"
+        ></ion-input>
+      </div>
+
+      <ion-buttons class="topbar-actions">
+        <ion-button
+          fill="clear"
+          size="small"
+          class="profile-button"
+          (click)="abrirPerfil()"
+          aria-label="Abrir mi perfil"
+        >
+          <ion-avatar class="profile-avatar-small">
+            @if (fotoPerfilUrl) {
+            <img [src]="fotoPerfilUrl" alt="" />
+            } @else {
+            <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+            }
+          </ion-avatar>
+          <span class="profile-name">{{ nombreUsuario }}</span>
+        </ion-button>
+        <ion-button
+          fill="clear"
+          size="small"
+          (click)="alternarTema()"
+          [attr.aria-label]="modoOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        >
+          <ion-icon [name]="modoOscuro ? 'sunny-outline' : 'moon-outline'" slot="start"></ion-icon>
+          <span class="theme-label">{{ modoOscuro ? 'Modo oscuro' : 'Modo claro' }}</span>
+        </ion-button>
+      </ion-buttons>
+    </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding main-content">
-  <!-- Aviso si se guardó sin conexión (HU-05) -->
-  <div *ngIf="avisoOffline" class="offline-banner ion-margin-bottom">
-    <ion-icon name="cloud-offline-outline"></ion-icon>
-    <span>Foto guardada sin internet. {{ avisoOffline }}</span>
+  @if (avisoOffline) {
+  <div class="offline-banner ion-margin-bottom" role="status">
+    <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+    <span>{{ avisoOffline }}</span>
   </div>
-
-  <!-- ========================================================================= -->
-  <!-- MODAL / TARJETA DE VISTA PREVIA EDITABLE (HU-01, 02, 03, 04, 09)          -->
-  <!-- ========================================================================= -->
-  <div *ngIf="mostrarVistaPrevia" class="preview-overlay">
-    <ion-card class="preview-card">
-      <ion-card-header>
-        <ion-card-title class="ion-text-center">Vista Previa del Recibo</ion-card-title>
-      </ion-card-header>
-
-      <ion-card-content>
-        <div *ngIf="cargandoLectura" class="ion-text-center ion-padding">
-          <ion-spinner name="crescent" color="primary"></ion-spinner>
-          <p>Extrayendo datos con IA...</p>
-        </div>
-
-        <div *ngIf="!cargandoLectura">
-          <!-- Comercio -->
-          <ion-item fill="outline" class="preview-item">
-            <ion-label position="stacked">Comercio</ion-label>
-            <ion-input [(ngModel)]="previewComercio" placeholder="Ej: Supermercado Central"></ion-input>
-          </ion-item>
-
-          <!-- Fecha (HU-02: Se marca en rojo si es futura) -->
-          <ion-item fill="outline" class="preview-item ion-margin-top" [class.input-error]="errorFecha">
-            <ion-label position="stacked">Fecha (AAAA-MM-DD)</ion-label>
-            <ion-input type="date" [(ngModel)]="previewFecha" (ionChange)="validarFechaEnTiempoReal()"></ion-input>
-          </ion-item>
-          <div *ngIf="errorFecha" class="error-text">
-            <ion-text color="danger">{{ errorFecha }}</ion-text>
-          </div>
-
-          <!-- Monto (HU-03: Editable, si es <= 0 restaura y avisa) -->
-          <ion-item fill="outline" class="preview-item ion-margin-top" [class.input-error]="errorMonto">
-            <ion-label position="stacked">Monto ($ COP)</ion-label>
-            <ion-input type="number" [value]="previewMonto" (ionInput)="onMontoChange($event)"></ion-input>
-          </ion-item>
-          <div *ngIf="errorMonto" class="error-text">
-            <ion-text color="danger">{{ errorMonto }}</ion-text>
-          </div>
-
-          <!-- Categoría (HU-04: Obligatoria) -->
-          <ion-item fill="outline" class="preview-item ion-margin-top" [class.input-error]="errorCategoria">
-            <ion-label position="stacked">Categoría</ion-label>
-            <ion-select [(ngModel)]="previewIdCategoria" placeholder="Selecciona una categoría">
-              <ion-select-option *ngFor="let cat of categorias" [value]="cat.id_categoria">
-                {{ cat.nombre }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-          <div *ngIf="errorCategoria" class="error-text">
-            <ion-text color="danger">{{ errorCategoria }}</ion-text>
-          </div>
-
-          <div *ngIf="mensajeGeneral" class="general-warning ion-margin-top">
-            <ion-text color="warning">{{ mensajeGeneral }}</ion-text>
-          </div>
-
-          <!-- Botones Guardar y Cancelar (HU-09) -->
-          <div class="action-buttons ion-margin-top">
-            <ion-button expand="block" color="success" (click)="guardarGasto()">
-              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-              Guardar Gasto
-            </ion-button>
-            <ion-button expand="block" fill="outline" color="medium" (click)="cancelarVistaPrevia()">
-              <ion-icon name="close-circle-outline" slot="start"></ion-icon>
-              Cancelar
-            </ion-button>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
+  } @if (fotosPendientes.length > 0) {
+  <ion-card class="pending-card">
+    <ion-card-header>
+      <ion-card-title>Recibos pendientes</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @for (foto of fotosPendientes; track foto.id) {
+      <ion-item lines="none" class="pending-item">
+        <ion-label>
+          <strong>{{ foto.estado === 'Error' ? 'Reintento pendiente' : foto.estado }}</strong>
+          <p>{{ foto.fechaCaptura | date: 'dd/MM/yyyy, HH:mm' }}</p>
+        </ion-label>
+        <ion-button slot="end" size="small" fill="outline" [disabled]="!conectado" (click)="procesarPendiente(foto.id)">
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>
+          Reintentar
+        </ion-button>
+      </ion-item>
+      }
+    </ion-card-content>
+  </ion-card>
+  } @if (mensajeGeneral && !mostrarVistaPrevia) {
+  <div class="general-warning global-warning" role="alert">
+    <ion-text color="warning">{{ mensajeGeneral }}</ion-text>
   </div>
-
-  <!-- ========================================================================= -->
-  <!-- SECCIÓN 1: GASTOS DEL DÍA                                                 -->
-  <!-- ========================================================================= -->
-  <div *ngIf="segmentoActivo === 'gastos'">
-    <!-- Selector de fecha para ver lista del día (HU-02) -->
-    <div class="date-filter-bar">
-      <ion-item lines="none" class="date-item">
-        <ion-icon name="calendar-outline" slot="start" color="primary"></ion-icon>
-        <ion-label>Fecha:</ion-label>
-        <ion-input type="date" [(ngModel)]="fechaFiltro" (ionChange)="cargarGastos()"></ion-input>
-      </ion-item>
+  } @if (segmentoActivo === 'gastos') {
+  <section class="page-section dashboard-page">
+    <div class="dashboard-heading">
+      <div>
+        <p class="eyebrow">RESUMEN DE GASTOS</p>
+        <h1>Dashboard</h1>
+      </div>
+      <div class="dashboard-actions">
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          #fileInput
+          (change)="onArchivoSeleccionado($event)"
+          hidden
+        />
+        <ion-button class="scan-btn" color="primary" size="small" (click)="fileInput.click()">
+          <ion-icon name="camera-outline" slot="start"></ion-icon>
+          Escanear recibo
+        </ion-button>
+        <ion-button class="register-btn" size="small" (click)="registrarGastoManual()">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          Registrar gasto
+        </ion-button>
+      </div>
     </div>
 
-    <!-- Botón para escanear recibo -->
-    <div class="scan-button-container ion-text-center ion-margin-vertical">
-      <input type="file" accept="image/*" capture="environment" #fileInput (change)="onArchivoSeleccionado($event)" hidden />
-      <ion-button size="large" expand="block" color="primary" class="scan-btn" (click)="fileInput.click()">
-        <ion-icon name="camera-outline" slot="start"></ion-icon>
-        Escanear Recibo
-      </ion-button>
-    </div>
-
-    <!-- Lista de Gastos -->
-    <h3 class="section-title">Gastos del día</h3>
-    <div *ngIf="gastos.length === 0" class="empty-state ion-text-center">
-      <p>No hay gastos registrados en esta fecha.</p>
-    </div>
-
-    <ion-list *ngIf="gastos.length > 0" class="expense-list">
-      <ion-item *ngFor="let g of gastos" class="expense-card" lines="none">
-        <div class="expense-info" slot="start">
-          <h4>{{ g.comercio }}</h4>
-          <ion-badge color="secondary">{{ obtenerNombreCategoria(g.id_categoria) }}</ion-badge>
+    <div class="stats-grid">
+      <article class="metric-card">
+        <span class="metric-label">GASTOS DEL PERÍODO</span>
+        <strong>{{ formatearCOP(totalPeriodo()) }}</strong>
+        <small>{{ gastosFiltrados().length }} movimientos</small>
+      </article>
+      <article class="metric-card">
+        <span class="metric-label">PERÍODO SELECCIONADO</span>
+        <strong class="metric-text">{{ etiquetaPeriodo() }}</strong>
+        <small>{{ periodoFiltro === 'rango' ? 'Rango personalizado' : fechaFiltro }}</small>
+      </article>
+      <article class="metric-card">
+        <div class="metric-topline">
+          <span class="metric-label">PRESUPUESTO MENSUAL</span>
+          @if (totalPresupuesto() > 0) {
+          <strong class="metric-percent">{{ porcentajePresupuesto() }}%</strong>
+          }
         </div>
-        <div class="expense-amount" slot="end">
-          <span class="amount-val">{{ formatearCOP(g.monto) }}</span>
+        @if (totalPresupuesto() > 0) {
+        <div
+          class="progress-track"
+          role="progressbar"
+          [attr.aria-valuenow]="progresoPresupuesto()"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span [style.width.%]="progresoPresupuesto()"></span>
+        </div>
+        <small>{{ formatearCOP(resumen?.total_mes ?? 0) }} de {{ formatearCOP(totalPresupuesto()) }}</small>
+        } @else {
+        <strong class="metric-text">Sin tope definido</strong>
+        <small>Configura tu presupuesto mensual</small>
+        }
+      </article>
+      <article class="metric-card">
+        <span class="metric-label">CATEGORÍA PRINCIPAL</span>
+        @if (categoriaPrincipal(); as principal) {
+        <strong class="metric-text">{{ principal.categoria }}</strong>
+        <small>{{ formatearCOP(principal.total) }} este mes</small>
+        } @else {
+        <strong class="metric-text">Sin datos</strong>
+        <small>Agrega un gasto para ver el resumen</small>
+        }
+      </article>
+    </div>
+
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">TU ACTIVIDAD</p>
+        <h2>Mis gastos recientes</h2>
+      </div>
+      <ion-badge color="primary">{{ gastosFiltrados().length }} registros</ion-badge>
+    </div>
+
+    <div class="activity-controls">
+      <div class="period-chips" role="group" aria-label="Filtrar por período">
+        <button type="button" [class.active]="periodoFiltro === 'dia'" (click)="seleccionarPeriodo('dia')">Día</button>
+        <button type="button" [class.active]="periodoFiltro === 'semana'" (click)="seleccionarPeriodo('semana')">
+          Semana
+        </button>
+        <button type="button" [class.active]="periodoFiltro === 'mes'" (click)="seleccionarPeriodo('mes')">Mes</button>
+        <button type="button" [class.active]="periodoFiltro === 'rango'" (click)="seleccionarPeriodo('rango')">
+          Rango
+        </button>
+      </div>
+      @if (periodoFiltro !== 'rango') {
+      <ion-item class="date-filter" lines="none">
+        <ion-icon name="calendar-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-input
+          type="date"
+          [(ngModel)]="fechaFiltro"
+          (ionChange)="cargarGastos()"
+          aria-label="Fecha de referencia"
+        ></ion-input>
+      </ion-item>
+      } @else {
+      <div class="date-range">
+        <ion-item class="date-filter" lines="none">
+          <ion-label>Desde</ion-label>
+          <ion-input
+            type="date"
+            [(ngModel)]="fechaInicioRango"
+            (ionChange)="cargarGastos()"
+            aria-label="Fecha inicial"
+          ></ion-input>
+        </ion-item>
+        <ion-item class="date-filter" lines="none">
+          <ion-label>Hasta</ion-label>
+          <ion-input
+            type="date"
+            [(ngModel)]="fechaFinRango"
+            (ionChange)="cargarGastos()"
+            aria-label="Fecha final"
+          ></ion-input>
+        </ion-item>
+      </div>
+      }
+    </div>
+
+    @if (gastosFiltrados().length === 0) {
+    <div class="empty-state">
+      <ion-icon name="wallet-outline" aria-hidden="true"></ion-icon>
+      <p>{{ busquedaGastos ? 'No encontramos gastos con esa búsqueda.' : 'No hay gastos para este período.' }}</p>
+    </div>
+    } @else {
+    <ion-list class="expense-list">
+      @for (gasto of gastosFiltrados(); track gasto.id_gasto) {
+      <ion-item class="expense-card" lines="none">
+        <div class="expense-icon" slot="start">
+          <ion-icon name="wallet-outline"></ion-icon>
+        </div>
+        <div class="expense-info">
+          <span class="expense-category">{{ obtenerNombreCategoria(gasto.id_categoria) }}</span>
+          <h3>{{ gasto.comercio }}</h3>
+          <p>{{ formatearFecha(gasto.fecha) }}</p>
+        </div>
+        <div class="expense-actions" slot="end">
+          <span class="expense-amount">{{ formatearCOP(gasto.monto) }}</span>
+          <ion-button
+            class="delete-expense"
+            fill="clear"
+            size="small"
+            [disabled]="confirmacionEliminacionAbierta || eliminandoGastoId !== null"
+            [attr.aria-label]="'Eliminar gasto de ' + gasto.comercio"
+            (click)="confirmarEliminarGasto(gasto)"
+          >
+            @if (eliminandoGastoId === gasto.id_gasto) {
+            <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            }
+          </ion-button>
         </div>
       </ion-item>
+      }
     </ion-list>
-  </div>
+    }
+  </section>
+  } @if (segmentoActivo === 'resumen') {
+  <section class="page-section">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Tus finanzas</p>
+        <h2>Resumen mensual</h2>
+      </div>
+      <div class="month-controls">
+        <ion-button fill="clear" size="small" aria-label="Mes anterior" (click)="moverMesResumen(-1)">
+          <ion-icon name="chevron-back-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <span>{{ nombreMesResumen() }}</span>
+        <ion-button fill="clear" size="small" aria-label="Mes siguiente" (click)="moverMesResumen(1)">
+          <ion-icon name="chevron-forward-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
 
-  <!-- ========================================================================= -->
-  <!-- SECCIÓN 2: RESUMEN MENSUAL Y GRÁFICO (HU-06)                              -->
-  <!-- ========================================================================= -->
-  <div *ngIf="segmentoActivo === 'resumen'">
     <ion-card class="summary-card">
-      <ion-card-header>
-        <ion-card-title>Resumen del Mes</ion-card-title>
-      </ion-card-header>
       <ion-card-content>
-        <div *ngIf="!resumen || resumen.items.length === 0" class="ion-text-center ion-padding">
-          <p class="empty-text">No hay gastos en este mes</p>
+        @if (resumen; as resumenActual) { @if (resumenActual.items.length === 0) {
+        <div class="empty-state">
+          <ion-icon name="pie-chart-outline" aria-hidden="true"></ion-icon>
+          <p>No hay gastos en este mes</p>
         </div>
-
-        <div *ngIf="resumen && resumen.items.length > 0">
-          <h2 class="total-month">Total: {{ formatearCOP(resumen.total_mes) }}</h2>
-
-          <div *ngFor="let item of resumen.items" class="summary-row ion-margin-top">
-            <div class="summary-labels">
-              <span class="cat-name">{{ item.categoria }}</span>
-              <span class="cat-pct">{{ item.porcentaje }}% ({{ formatearCOP(item.total) }})</span>
-            </div>
-            <ion-progress-bar [value]="item.porcentaje / 100" color="primary"></ion-progress-bar>
+        } @else {
+        <div class="summary-total">
+          <p>Total del mes</p>
+          <h3>{{ formatearCOP(resumenActual.total_mes) }}</h3>
+        </div>
+        <div
+          class="pie-chart"
+          [style.background]="gradienteResumen()"
+          role="img"
+          [attr.aria-label]="'Distribución de gastos de ' + nombreMesResumen()"
+        >
+          <div class="pie-chart-center">
+            <span>Total</span>
+            <strong>{{ formatearCOP(resumenActual.total_mes) }}</strong>
           </div>
         </div>
+        <div class="chart-legend">
+          @for ( item of resumenActual.items; track item.id_categoria; let indice = $index ) {
+          <div class="legend-item">
+            <span class="legend-dot" [style.background]="'var(--chart-color-' + (indice % 5) + ')'"></span>
+            <span class="legend-name">{{ item.categoria }}</span>
+            <span class="legend-value">{{ item.porcentaje }}%</span>
+            <span class="legend-total">{{ formatearCOP(item.total) }}</span>
+          </div>
+          }
+        </div>
+        } } @else {
+        <div class="empty-state" aria-live="polite">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+        </div>
+        }
       </ion-card-content>
     </ion-card>
-  </div>
+  </section>
+  } @if (segmentoActivo === 'topes') {
+  <section class="page-section">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Planifica con calma</p>
+        <h2>Topes mensuales</h2>
+      </div>
+    </div>
 
-  <!-- ========================================================================= -->
-  <!-- SECCIÓN 3: TOPES Y ALERTAS (HU-07, HU-08)                                 -->
-  <!-- ========================================================================= -->
-  <div *ngIf="segmentoActivo === 'topes'">
     <ion-card class="topes-card">
       <ion-card-header>
-        <ion-card-title>Definir Tope Mensual</ion-card-title>
+        <ion-card-title>Definir un tope</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <ion-item fill="outline" class="preview-item">
           <ion-label position="stacked">Categoría</ion-label>
           <ion-select [(ngModel)]="nuevoTopeCategoriaId" placeholder="Selecciona categoría">
-            <ion-select-option *ngFor="let cat of categorias" [value]="cat.id_categoria">
-              {{ cat.nombre }}
-            </ion-select-option>
+            @for (categoria of categorias; track categoria.id_categoria) {
+            <ion-select-option [value]="categoria.id_categoria"> {{ categoria.nombre }} </ion-select-option>
+            }
           </ion-select>
         </ion-item>
-
         <ion-item fill="outline" class="preview-item ion-margin-top">
-          <ion-label position="stacked">Monto Tope ($ COP)</ion-label>
-          <ion-input type="number" [(ngModel)]="nuevoTopeMonto" placeholder="Ej: 400000"></ion-input>
+          <ion-label position="stacked">Monto máximo en pesos</ion-label>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            [(ngModel)]="nuevoTopeMonto"
+            placeholder="Ej: 400000"
+            aria-label="Monto del tope"
+          ></ion-input>
         </ion-item>
-
-        <ion-button expand="block" color="primary" class="ion-margin-top" (click)="guardarNuevoTope()">
-          Establecer Tope
+        @if (errorTope) {
+        <div class="error-text" role="alert">
+          <ion-text color="danger">{{ errorTope }}</ion-text>
+        </div>
+        }
+        <ion-button class="tope-submit" color="primary" [disabled]="guardandoTope" (click)="guardarNuevoTope()">
+          @if (guardandoTope) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Guardando... } @else { Guardar tope }
         </ion-button>
       </ion-card-content>
     </ion-card>
 
-    <h3 class="section-title ion-margin-top">Estado de tus topes</h3>
-
-    <div *ngIf="topes.length === 0" class="empty-state ion-text-center">
-      <p>Sin tope definido</p>
-    </div>
-
-    <ion-list *ngIf="topes.length > 0">
-      <ion-item *ngFor="let t of topes" class="tope-item" lines="none">
+    <h3 class="section-title">Estado por categoría</h3>
+    @for (categoria of categorias; track categoria.id_categoria) {
+    <ion-card class="tope-item">
+      <ion-card-content>
+        @if (obtenerTope(categoria.id_categoria); as tope) {
         <div class="tope-info">
-          <h4>{{ t.categoria }}: {{ formatearCOP(t.total_gastado) }} de {{ formatearCOP(t.monto_tope) }}</h4>
-          <ion-progress-bar [value]="t.porcentaje / 100" [color]="t.alerta_80 ? 'danger' : 'primary'"></ion-progress-bar>
-          <div *ngIf="t.alerta_80" class="alert-box ion-margin-top">
-            <ion-icon name="warning-outline" color="danger"></ion-icon>
-            <ion-text color="danger"><strong>{{ t.mensaje_alerta }}</strong></ion-text>
+          <div class="tope-labels">
+            <h3>{{ categoria.nombre }}</h3>
+            <span>{{ tope.porcentaje | number: '1.0-0' }}%</span>
           </div>
+          <p>{{ formatearCOP(tope.total_gastado) }} de {{ formatearCOP(tope.monto_tope) }}</p>
+          <ion-progress-bar
+            [value]="tope.porcentaje / 100"
+            [color]="tope.alerta_80 ? 'danger' : 'primary'"
+          ></ion-progress-bar>
+          @if (tope.alerta_80) {
+          <div class="alert-box ion-margin-top" role="status">
+            <ion-icon name="warning-outline" color="danger"></ion-icon>
+            <ion-text color="danger"><strong>{{ tope.mensaje_alerta }}</strong></ion-text>
+          </div>
+          }
         </div>
-      </ion-item>
-    </ion-list>
-  </div>
+        } @else {
+        <div class="tope-labels">
+          <h3>{{ categoria.nombre }}</h3>
+          <ion-badge color="medium">Sin tope definido</ion-badge>
+        </div>
+        }
+      </ion-card-content>
+    </ion-card>
+    }
+  </section>
+  }
 </ion-content>
+
+@if (mostrarVistaPrevia) {
+<div class="preview-overlay">
+  <ion-card class="preview-card">
+    <ion-card-header>
+      <ion-card-title class="ion-text-center">
+        {{ esRegistroManual ? 'Registrar gasto' : 'Revisa tu recibo' }}
+      </ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      @if (cargandoLectura) {
+      <div class="ion-text-center ion-padding">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Extrayendo datos del recibo...</p>
+      </div>
+      } @else {
+      <ion-item fill="outline" class="preview-item" [class.input-error]="errorComercio">
+        <ion-label position="stacked">Comercio</ion-label>
+        <ion-input
+          [(ngModel)]="previewComercio"
+          placeholder="Ej: Supermercado Central"
+          aria-label="Comercio"
+        ></ion-input>
+      </ion-item>
+      @if (errorComercio) {
+      <div class="error-text" role="alert">
+        <ion-text color="danger">{{ errorComercio }}</ion-text>
+      </div>
+      }
+
+      <ion-item fill="outline" class="preview-item ion-margin-top" [class.input-error]="errorFecha">
+        <ion-label position="stacked">Fecha</ion-label>
+        <ion-input
+          type="date"
+          [(ngModel)]="previewFecha"
+          (ionChange)="validarFechaEnTiempoReal()"
+          aria-label="Fecha del gasto"
+        ></ion-input>
+      </ion-item>
+      @if (errorFecha) {
+      <div class="error-text" role="alert">
+        <ion-text color="danger">{{ errorFecha }}</ion-text>
+      </div>
+      }
+
+      <ion-item fill="outline" class="preview-item ion-margin-top" [class.input-error]="errorMonto">
+        <ion-label position="stacked">Monto en pesos</ion-label>
+        <ion-input
+          type="number"
+          inputmode="decimal"
+          [value]="previewMonto"
+          (ionInput)="onMontoChange($event)"
+          aria-label="Monto del gasto"
+        ></ion-input>
+      </ion-item>
+      @if (errorMonto) {
+      <div class="error-text" role="alert">
+        <ion-text color="danger">{{ errorMonto }}</ion-text>
+      </div>
+      }
+
+      <ion-item fill="outline" class="preview-item ion-margin-top" [class.input-error]="errorCategoria">
+        <ion-label position="stacked">Categoría</ion-label>
+        <ion-select
+          [(ngModel)]="previewIdCategoria"
+          placeholder="Selecciona una categoría"
+          aria-label="Categoría del gasto"
+        >
+          @for (categoria of categorias; track categoria.id_categoria) {
+          <ion-select-option [value]="categoria.id_categoria"> {{ categoria.nombre }} </ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      @if (errorCategoria) {
+      <div class="error-text" role="alert">
+        <ion-text color="danger">{{ errorCategoria }}</ion-text>
+      </div>
+      } @if (mensajeGeneral) {
+      <div class="general-warning ion-margin-top" role="status">
+        <ion-text color="warning">{{ mensajeGeneral }}</ion-text>
+      </div>
+      }
+
+      <div class="action-buttons ion-margin-top">
+        <ion-button color="primary" [disabled]="guardandoGasto" (click)="guardarGasto()">
+          @if (guardandoGasto) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Guardando... } @else { Guardar gasto }
+        </ion-button>
+        <ion-button fill="outline" color="medium" [disabled]="guardandoGasto" (click)="cancelarVistaPrevia()">
+          Cancelar
+        </ion-button>
+      </div>
+      }
+    </ion-card-content>
+  </ion-card>
+</div>
+}

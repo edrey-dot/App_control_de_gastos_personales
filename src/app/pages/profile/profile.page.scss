@@ -1,0 +1,87 @@
+.profile-content {
+  --background: var(--app-background);
+}
+
+.profile-container {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding-bottom: 1.5rem;
+}
+
+.loading-state,
+.profile-heading {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.8rem;
+  text-align: center;
+}
+
+.loading-state {
+  padding-top: 3rem;
+  color: var(--app-muted);
+}
+
+.profile-heading {
+  padding: 1.5rem 0 1rem;
+}
+
+.profile-heading h1 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 1.35rem;
+}
+
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  background: var(--app-surface-raised);
+  color: var(--ion-color-primary);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar ion-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.profile-card {
+  margin: 0;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: none;
+}
+
+.profile-field {
+  --background: var(--app-surface-raised);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.profile-message {
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.error-message {
+  background: rgba(var(--ion-color-danger-rgb), 0.12);
+}
+
+.success-message {
+  background: rgba(var(--ion-color-success-rgb), 0.12);
+}
+
+.save-profile-button {
+  margin-top: 1rem;
+}
+
+.logout-button {
+  margin-top: 0.75rem;
+}

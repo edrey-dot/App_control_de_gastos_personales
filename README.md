@@ -5,7 +5,17 @@
 Aplicación para registrar gastos personales, definir topes mensuales por
 categoría y consultar resúmenes. El frontend está hecho con Ionic y Angular; el
 backend ofrece una API FastAPI con autenticación JWT y base de datos SQLite por
-defecto. La lectura de recibos funciona en modo simulado o mediante Gemini.
+defecto. La lectura de recibos funciona en modo simulado, Gemini u OpenAI.
+Incluye filtros de gastos por día, semana, mes o rango, un resumen con gráfico
+de pastel, una cola de recibos persistente sin conexión y cambio manual entre
+tema oscuro negro/azul y claro blanco/azul.
+
+Las cuentas nuevas incluyen nombre para mostrar, correo y celular colombiano
+(10 dígitos, con prefijo `+57` opcional); se puede iniciar sesión con correo o
+celular y contraseña. El celular no se verifica por SMS. El perfil permite
+cambiar únicamente el nombre para mostrar y guardar una foto de hasta 2 MB en la
+base de datos del backend, disponible en otros dispositivos mediante rutas
+autenticadas. El correo y el celular no se editan desde el perfil.
 
 ## 2. Requisitos
 
@@ -68,25 +78,31 @@ npm start
 ```
 
 Abre `http://localhost:4200`. Para habilitar la lectura real de recibos, define
-`AI_PROVIDER=gemini` y `GEMINI_API_KEY` en el `.env` del backend. La clave se
-mantiene en el servidor; nunca la configures en el frontend.
+`AI_PROVIDER=gemini` y `GEMINI_API_KEY`, o `AI_PROVIDER=openai` y
+`OPENAI_API_KEY`, en el `.env` del backend. Las claves se mantienen en el
+servidor; nunca las configures en el frontend.
+
+El frontend guarda la preferencia del tema y las fotos pendientes en el
+almacenamiento local del navegador (IndexedDB). Al recuperar conexión, intenta
+procesar las fotos en orden y muestra cada lectura para confirmación antes de
+crear el gasto.
+
+**Antes de desplegar:** `src/environments/environment.prod.ts` todavía apunta a
+`http://localhost:8000`. Configura allí la URL HTTPS real de la API; el
+certificado TLS y el servidor de producción no forman parte de este proyecto.
 
 ## 5. Pruebas y verificaciones
 
 Desde `App_gastos\backend`, activa el entorno virtual y ejecuta:
 
 ```powershell
-Remove-Item .\gastos.db -ErrorAction SilentlyContinue
 python -m pytest -q
 ruff check .
 pip-audit -r requirements.txt
 ```
 
-**Advertencia H-07:** las pruebas comparten `backend\gastos.db` y dejan datos
-persistidos. Hasta aislar la base de datos de pruebas, elimina ese archivo antes
-de cada ejecución de `pytest`. Esto borra los datos locales guardados en esa
-base; respáldala primero si necesitas conservarlos. No se modificó ninguna
-prueba existente para ocultar este problema.
+Las pruebas backend usan una base SQLite temporal creada por
+`backend/tests/conftest.py`; no eliminan ni modifican las bases de datos locales.
 
 Para las pruebas unitarias del frontend, desde la raíz:
 
@@ -94,10 +110,15 @@ Para las pruebas unitarias del frontend, desde la raíz:
 npm run test:unit
 ```
 
-En la revisión del 2026-11-14 este comando compiló y reportó 2 pruebas
-aprobadas, pero Vitest terminó con un error asíncrono `NG04002` al navegar a
-`/login` desde `src/app/home/home.page.spec.ts`. Queda pendiente; no se modificó
-esa prueba existente.
+Para las pruebas end-to-end con Playwright, instala Chromium una vez y ejecuta:
+
+```powershell
+npx playwright install chromium
+npm run test:e2e
+```
+
+La suite frontend incluye pruebas de tema, filtros HTTP y almacenamiento de
+recibos pendientes.
 
 ## 6. Estructura del proyecto
 
@@ -112,6 +133,8 @@ App_gastos/
 │   └── tests/            # Pruebas del backend
 ├── src/app/              # Páginas, servicios y componentes Ionic/Angular
 ├── e2e/                  # Pruebas end-to-end del frontend
+├── DECISIONES.md         # Decisiones de implementación y límites conocidos
+├── PREGUNTAS.md          # Datos aún necesarios para producción/aceptación
 ├── README.md
 └── bitacora_ia.md
 ```

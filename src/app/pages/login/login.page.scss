@@ -1,51 +1,59 @@
 .login-container {
-  max-width: 450px;
-  margin: 2rem auto;
+  max-width: 420px;
+  margin: clamp(1.25rem, 6vh, 3.5rem) auto;
 }
 
 .brand-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   .app-title {
     font-weight: 800;
-    font-size: 2rem;
+    font-size: clamp(1.8rem, 5vw, 2.35rem);
     margin-bottom: 0.5rem;
+    color: var(--app-text);
   }
   .app-subtitle {
-    color: var(--ion-color-medium);
+    color: var(--app-muted);
     font-size: 0.95rem;
   }
 }
 
 .custom-segment {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.15rem;
   border-radius: 12px;
+  background: var(--app-surface-raised);
 }
 
 .auth-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin: 0;
+  padding: 0.25rem;
 }
 
 .form-item {
   border-radius: 8px;
 }
 
+.phone-note {
+  margin: 0.45rem 0 0;
+  color: var(--app-muted);
+  font-size: 0.78rem;
+  text-align: left;
+}
+
 .submit-btn {
-  height: 48px;
-  font-weight: 600;
-  border-radius: 10px;
+  max-width: 280px;
+  margin-inline: auto;
 }
 
 .error-banner {
   padding: 8px;
-  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  background: rgba(var(--ion-color-danger-rgb), 0.12);
   border-radius: 8px;
   font-size: 0.9rem;
 }
 
 .success-banner {
   padding: 8px;
-  background: rgba(var(--ion-color-success-rgb), 0.1);
+  background: rgba(var(--ion-color-success-rgb), 0.12);
   border-radius: 8px;
   font-size: 0.9rem;
 }

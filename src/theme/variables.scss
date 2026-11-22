@@ -1,2 +1,987 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+:root {
+  color-scheme: light;
+  --ion-color-primary: #2463eb;
+  --ion-color-primary-rgb: 36, 99, 235;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #1f57cf;
+  --ion-color-primary-tint: #3a73ed;
+  --ion-color-secondary: #5da8ff;
+  --ion-color-secondary-rgb: 93, 168, 255;
+  --ion-color-secondary-contrast: #071426;
+  --ion-color-secondary-contrast-rgb: 7, 20, 38;
+  --app-background: #f3f7fd;
+  --app-surface: #ffffff;
+  --app-surface-raised: #f8faff;
+  --app-text: #152238;
+  --app-muted: #63728a;
+  --app-border: #dce5f2;
+  --app-shadow: 0 12px 32px rgba(28, 57, 99, 0.08);
+  --chart-color-0: #2463eb;
+  --chart-color-1: #54b5e5;
+  --chart-color-2: #f0ad4e;
+  --chart-color-3: #7c6de2;
+  --chart-color-4: #51b88a;
+}
+
+.ion-palette-dark {
+  color-scheme: dark;
+  --ion-color-primary: #4b8cff;
+  --ion-color-primary-rgb: 75, 140, 255;
+  --ion-color-primary-contrast: #071426;
+  --ion-color-primary-contrast-rgb: 7, 20, 38;
+  --ion-color-primary-shade: #427be0;
+  --ion-color-primary-tint: #5d98ff;
+  --ion-color-secondary: #70b9ff;
+  --ion-color-secondary-rgb: 112, 185, 255;
+  --ion-color-secondary-contrast: #071426;
+  --ion-color-secondary-contrast-rgb: 7, 20, 38;
+  --app-background: #080e18;
+  --app-surface: #111b2b;
+  --app-surface-raised: #17243a;
+  --app-text: #edf4ff;
+  --app-muted: #a1b1c9;
+  --app-border: #253651;
+  --app-shadow: 0 14px 36px rgba(0, 0, 0, 0.24);
+  --chart-color-0: #5b91ff;
+  --chart-color-1: #5ac0e8;
+  --chart-color-2: #ffc36e;
+  --chart-color-3: #a695ff;
+  --chart-color-4: #68d6a5;
+}
+
+body {
+  background: var(--app-background);
+  color: var(--app-text);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+ion-content {
+  --background: var(--app-background);
+  --color: var(--app-text);
+}
+
+ion-toolbar {
+  --background: var(--app-surface);
+  --color: var(--app-text);
+  --border-color: var(--app-border);
+}
+
+ion-card,
+ion-item {
+  --background: var(--app-surface);
+  --color: var(--app-text);
+  color: var(--app-text);
+}
+
+ion-card {
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  box-shadow: var(--app-shadow);
+}
+
+ion-button {
+  --border-radius: 999px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  min-height: 36px;
+  font-size: 0.9rem;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+ion-button.button-small {
+  min-height: 30px;
+  font-size: 0.82rem;
+}
+
+ion-input,
+ion-select {
+  --color: var(--app-text);
+}
+
+app-home .pie-chart {
+  display: grid;
+  width: min(58vw, 220px);
+  aspect-ratio: 1;
+  margin: 1.2rem auto 1.5rem;
+  place-items: center;
+  border-radius: 50%;
+}
+
+app-home .pie-chart-center {
+  display: flex;
+  width: 63%;
+  aspect-ratio: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--app-surface);
+  color: var(--app-muted);
+  font-size: 0.75rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+app-home .pie-chart-center strong {
+  max-width: 90%;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: clamp(0.82rem, 3.5vw, 1.05rem);
+  text-overflow: ellipsis;
+}
+
+app-home .chart-legend {
+  display: grid;
+  gap: 0.7rem;
+}
+
+app-home .legend-item {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--app-text);
+  font-size: 0.85rem;
+}
+
+app-home .legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+app-home .legend-value {
+  color: var(--ion-color-primary);
+  font-weight: 700;
+}
+
+app-home .legend-total {
+  color: var(--app-muted);
+  text-align: end;
+}
+
+app-home .alert-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  font-size: 0.84rem;
+}
+
+app-home .offline-banner {
+  display: flex;
+  width: min(100%, 780px);
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 auto 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(var(--ion-color-warning-rgb), 0.4);
+  border-radius: 13px;
+  background: rgba(var(--ion-color-warning-rgb), 0.12);
+  color: var(--app-text);
+  font-size: 0.85rem;
+}
+
+app-home .pending-card {
+  width: min(100%, 780px);
+  margin: 0 auto 1rem;
+}
+
+app-home .pending-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+app-home .pending-item strong {
+  color: var(--app-text);
+  font-size: 0.88rem;
+}
+
+app-home .preview-overlay {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(3, 10, 22, 0.72);
+  inset: 0;
+}
+
+app-home .preview-card {
+  width: min(100%, 480px);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+app-home .preview-item {
+  --background: var(--app-surface-raised);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+app-home .preview-item.input-error {
+  border-color: var(--ion-color-danger);
+}
+
+app-home .error-text {
+  margin: 0.35rem 0 0 0.55rem;
+  font-size: 0.82rem;
+}
+
+app-home .general-warning {
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(var(--ion-color-warning-rgb), 0.12);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 480px) {
+  app-home .legend-item {
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+  }
+
+  app-home .legend-total {
+    grid-column: 2 / -1;
+  }
+}
+
+app-home {
+  display: block;
+}
+
+app-home .main-content {
+  --background: var(--app-background);
+}
+
+app-home .navigation-toolbar {
+  --background: var(--app-surface);
+  padding: 0 1rem 0.65rem;
+}
+
+app-home .nav-segment {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 3px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface-raised);
+}
+
+app-home .nav-segment ion-segment-button {
+  --border-radius: 999px;
+  min-height: 38px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+app-home .page-section {
+  width: min(100%, 780px);
+  margin: 0 auto;
+}
+
+app-home .filter-card,
+app-home .summary-card,
+app-home .topes-card,
+app-home .pending-card,
+app-home .tope-item {
+  margin-inline: 0;
+}
+
+app-home .filter-card ion-card-content {
+  padding: 0.5rem 1rem;
+}
+
+app-home .filter-card ion-item {
+  --min-height: 48px;
+  --padding-start: 0;
+}
+
+app-home .date-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+app-home .scan-button-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0 1.5rem;
+}
+
+app-home .scan-btn {
+  min-width: 0;
+}
+
+app-home .section-heading,
+app-home .tope-labels,
+app-home .summary-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+app-home .section-heading {
+  margin: 1.35rem 0 0.8rem;
+}
+
+app-home .section-heading h2 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 1.2rem;
+  font-weight: 750;
+}
+
+app-home .eyebrow {
+  margin: 0 0 0.2rem;
+  color: var(--ion-color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+app-home .section-title {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--app-text);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+app-home .expense-list {
+  padding: 0;
+  background: transparent;
+}
+
+app-home .expense-card {
+  --background: var(--app-surface);
+  --inner-padding-end: 0.85rem;
+  --padding-start: 0.85rem;
+  min-height: 76px;
+  margin-bottom: 0.65rem;
+  border: 1px solid var(--app-border);
+  border-radius: 15px;
+  box-shadow: var(--app-shadow);
+}
+
+app-home .expense-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin-inline-end: 0.85rem;
+  place-items: center;
+  border-radius: 13px;
+  background: rgba(var(--ion-color-primary-rgb), 0.12);
+  color: var(--ion-color-primary);
+  font-size: 1.1rem;
+}
+
+app-home .expense-info h3 {
+  margin: 0 0 0.25rem;
+  color: var(--app-text);
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+app-home .expense-info p,
+app-home .summary-total p,
+app-home .tope-info p,
+app-home .pending-item p {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 0.82rem;
+}
+
+app-home .expense-amount {
+  color: var(--ion-color-primary);
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+app-home .empty-state {
+  display: grid;
+  min-height: 180px;
+  padding: 1.5rem;
+  place-content: center;
+  justify-items: center;
+  color: var(--app-muted);
+  text-align: center;
+}
+
+app-home .empty-state ion-icon {
+  color: var(--ion-color-primary);
+  font-size: 2rem;
+}
+
+app-home .month-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--app-text);
+  font-size: 0.85rem;
+  font-weight: 650;
+  text-transform: capitalize;
+}
+
+app-home .month-controls ion-button {
+  margin: 0;
+}
+
+app-home .summary-total {
+  margin-bottom: 1rem;
+}
+
+app-home .summary-total h3 {
+  margin: 0.2rem 0;
+  color: var(--app-text);
+  font-size: 1.65rem;
+  font-weight: 800;
+}
+
+app-home .tope-submit {
+  margin-top: 0.8rem;
+}
+
+app-home .tope-item {
+  margin-bottom: 0.65rem;
+}
+
+app-home .tope-labels h3 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+app-home .tope-info p {
+  margin: 0.5rem 0 0.65rem;
+}
+
+@media (max-width: 480px) {
+  app-home .main-content {
+    --padding-start: 0.9rem;
+    --padding-end: 0.9rem;
+  }
+
+  app-home .date-range {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  app-home .section-heading {
+    align-items: flex-start;
+  }
+
+  app-home .month-controls {
+    gap: 0;
+    font-size: 0.75rem;
+  }
+}
+
+app-home .app-toolbar {
+  --min-height: 68px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+app-home .topbar {
+  display: flex;
+  width: min(100%, 1320px);
+  align-items: center;
+  gap: 1rem;
+  margin: 0 auto;
+  padding: 0 0.75rem;
+}
+
+app-home .brand {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--app-text);
+  font-size: 1rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+app-home .brand-mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 0.9rem;
+}
+
+app-home .brand-light {
+  margin-left: 0.15rem;
+  color: var(--ion-color-primary);
+}
+
+app-home .topbar .nav-segment {
+  flex: 0 1 330px;
+  max-width: 350px;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface-raised);
+}
+
+app-home .topbar .nav-segment ion-segment-button {
+  --border-radius: 999px;
+  min-height: 34px;
+  font-size: 0.76rem;
+}
+
+app-home .header-search {
+  display: flex;
+  min-width: 150px;
+  flex: 1 1 200px;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  background: var(--app-surface-raised);
+  color: var(--app-muted);
+}
+
+app-home .header-search ion-icon {
+  flex: 0 0 auto;
+}
+
+app-home .header-search ion-input {
+  min-height: 36px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --placeholder-color: var(--app-muted);
+  font-size: 0.78rem;
+}
+
+app-home .topbar-actions {
+  flex: 0 0 auto;
+  gap: 0.1rem;
+}
+
+app-home .topbar-actions ion-button {
+  --padding-start: 0.65rem;
+  --padding-end: 0.65rem;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+app-home .profile-button {
+  gap: 0.4rem;
+  color: var(--app-text);
+}
+
+app-home .profile-avatar-small {
+  width: 30px;
+  height: 30px;
+  background: var(--app-surface-raised);
+  color: var(--ion-color-primary);
+}
+
+app-home .profile-avatar-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+app-home .profile-avatar-small ion-icon {
+  width: 100%;
+  height: 100%;
+}
+
+app-home .profile-name {
+  max-width: 115px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+app-home .dashboard-page {
+  width: min(100%, 1020px);
+  max-width: 1020px;
+  padding-top: 1.15rem;
+}
+
+app-home .dashboard-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+app-home .dashboard-heading h1 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: clamp(1.45rem, 3vw, 1.8rem);
+  font-weight: 760;
+}
+
+app-home .dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+app-home .dashboard-actions ion-button {
+  --padding-start: 0.8rem;
+  --padding-end: 0.8rem;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+app-home .register-btn {
+  --background: var(--app-surface-raised);
+  --color: var(--app-text);
+  --border-color: var(--app-border);
+  --border-style: solid;
+  --border-width: 1px;
+}
+
+app-home .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 1.75rem;
+}
+
+app-home .metric-card {
+  min-width: 0;
+  min-height: 102px;
+  padding: 0.85rem 0.9rem;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--app-surface-raised), var(--app-surface));
+  box-shadow: var(--app-shadow);
+}
+
+app-home .metric-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--app-muted);
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+}
+
+app-home .metric-card > strong,
+app-home .metric-topline strong {
+  display: block;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+app-home .metric-card .metric-text {
+  font-size: 1rem;
+}
+
+app-home .metric-card small {
+  display: block;
+  margin-top: 0.35rem;
+  overflow: hidden;
+  color: var(--app-muted);
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+app-home .metric-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.3rem;
+}
+
+app-home .metric-topline .metric-label {
+  margin-bottom: 0.35rem;
+}
+
+app-home .metric-topline .metric-percent {
+  color: var(--ion-color-primary);
+  font-size: 0.95rem;
+}
+
+app-home .progress-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-border);
+}
+
+app-home .progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ion-color-primary), var(--ion-color-secondary));
+  transition: width 180ms ease;
+}
+
+app-home .dashboard-page .section-heading {
+  margin: 0 0 0.7rem;
+}
+
+app-home .activity-controls {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+app-home .period-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 3px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-surface-raised);
+}
+
+app-home .period-chips button {
+  min-height: 28px;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--app-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+app-home .period-chips button.active {
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-weight: 650;
+}
+
+app-home .date-filter {
+  width: min(100%, 225px);
+  min-height: 38px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  --background: var(--app-surface-raised);
+  --min-height: 38px;
+  --padding-start: 0.6rem;
+  --inner-padding-end: 0.5rem;
+}
+
+app-home .date-filter ion-icon {
+  color: var(--ion-color-primary);
+  font-size: 0.9rem;
+}
+
+app-home .date-filter ion-input {
+  font-size: 0.75rem;
+}
+
+app-home .date-range {
+  gap: 0.4rem;
+}
+
+app-home .date-range .date-filter {
+  width: auto;
+  min-width: 210px;
+}
+
+app-home .date-range ion-label {
+  color: var(--app-muted);
+  font-size: 0.72rem;
+}
+
+app-home .expense-card {
+  min-height: 70px;
+  margin-bottom: 0.5rem;
+  border-radius: 13px;
+}
+
+app-home .expense-category {
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 0.15rem;
+  padding: 0.12rem 0.42rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(var(--ion-color-primary-rgb), 0.12);
+  color: var(--ion-color-primary);
+  font-size: 0.62rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+app-home .expense-info h3 {
+  font-size: 0.88rem;
+}
+
+app-home .expense-info p {
+  font-size: 0.72rem;
+}
+
+app-home .expense-amount {
+  font-size: 0.86rem;
+}
+
+app-home .expense-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-inline-start: 0.45rem;
+}
+
+app-home .delete-expense {
+  --color: #f27b8a;
+  --padding-start: 0.4rem;
+  --padding-end: 0.4rem;
+  margin: 0;
+}
+
+app-home .delete-expense ion-icon,
+app-home .delete-expense ion-spinner {
+  font-size: 0.95rem;
+}
+
+app-home .global-warning {
+  width: min(100%, 1020px);
+  margin: 0.65rem auto;
+}
+
+@media (max-width: 900px) {
+  app-home .topbar {
+    gap: 0.55rem;
+  }
+
+  app-home .topbar .nav-segment {
+    flex-basis: 280px;
+  }
+
+  app-home .theme-label {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  app-home .app-toolbar {
+    --min-height: auto;
+  }
+
+  app-home .preview-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  app-home .preview-card {
+    max-height: calc(100vh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    margin-block: auto;
+  }
+
+  app-home .topbar {
+    flex-wrap: wrap;
+    padding: 0.45rem 0.2rem;
+  }
+
+  app-home .brand {
+    order: 1;
+  }
+
+  app-home .topbar-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  app-home .profile-name {
+    display: none;
+  }
+
+  app-home .topbar .nav-segment {
+    max-width: none;
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  app-home .header-search {
+    min-width: 0;
+    flex: 1 1 100%;
+    order: 4;
+  }
+
+  app-home .dashboard-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  app-home .dashboard-actions {
+    width: 100%;
+  }
+
+  app-home .dashboard-actions ion-button {
+    flex: 1 1 0;
+  }
+
+  app-home .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1.3rem;
+  }
+
+  app-home .metric-card {
+    min-height: 94px;
+    padding: 0.7rem;
+  }
+
+  app-home .activity-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  app-home .period-chips {
+    justify-content: space-between;
+  }
+
+  app-home .period-chips button {
+    flex: 1 1 auto;
+    padding: 0 0.45rem;
+  }
+
+  app-home .date-filter,
+  app-home .date-range .date-filter {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 370px) {
+  app-home .brand {
+    font-size: 0.9rem;
+  }
+
+  app-home .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  app-home .dashboard-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

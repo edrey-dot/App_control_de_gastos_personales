@@ -1,11 +1,13 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButtons,
+  IonIcon,
   IonContent,
   IonCard,
   IonCardHeader,
@@ -18,9 +20,13 @@ import {
   IonText,
   IonSegment,
   IonSegmentButton,
-  IonToast,
+  IonSpinner,
 } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { moonOutline, sunnyOutline } from 'ionicons/icons';
+
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -33,6 +39,8 @@ import { AuthService } from '../../services/auth.service';
     IonHeader,
     IonToolbar,
     IonTitle,
+    IonButtons,
+    IonIcon,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -45,29 +53,53 @@ import { AuthService } from '../../services/auth.service';
     IonText,
     IonSegment,
     IonSegmentButton,
+    IonSpinner,
   ],
 })
 export class LoginPage {
   private authService = inject(AuthService);
+  private themeService = inject(ThemeService);
+  private changeDetector = inject(ChangeDetectorRef);
   private router = inject(Router);
 
   modo: 'login' | 'registro' = 'login';
+  modoOscuro = this.themeService.modoOscuro;
+  identificador = '';
   correo = '';
+  telefono = '';
+  nombreUsuario = '';
   contrasena = '';
+  enviando = false;
   mensajeError = '';
   mensajeExito = '';
 
-  cambiarModo(modo: any) {
+  constructor() {
+    addIcons({ moonOutline, sunnyOutline });
+  }
+
+  alternarTema(): void {
+    this.themeService.alternar();
+    this.modoOscuro = this.themeService.modoOscuro;
+  }
+
+  cambiarModo(modo: string | number | null | undefined): void {
+    if (modo !== 'login' && modo !== 'registro') return;
     this.modo = modo;
     this.mensajeError = '';
     this.mensajeExito = '';
   }
 
-  onSubmit() {
+  onSubmit(): void {
+    if (this.enviando) return;
     this.mensajeError = '';
     this.mensajeExito = '';
 
-    if (!this.correo || !this.contrasena) {
+    const identificador = this.modo === 'registro' ? this.correo : this.identificador;
+    if (
+      !identificador.trim() ||
+      !this.contrasena ||
+      (this.modo === 'registro' && (!this.nombreUsuario.trim() || !this.telefono.trim()))
+    ) {
       this.mensajeError = 'Por favor completa todos los campos.';
       return;
     }
@@ -78,27 +110,43 @@ export class LoginPage {
         return;
       }
 
-      this.authService.registrar(this.correo, this.contrasena).subscribe({
-        next: () => {
-          this.mensajeExito = 'Cuenta creada exitosamente. Iniciando sesión...';
-          this.loginDirecto();
-        },
-        error: (err) => {
-          this.mensajeError = err.error?.detail || 'Error al registrar usuario.';
-        },
-      });
+      this.enviando = true;
+      this.authService
+        .registrar({
+          nombre_usuario: this.nombreUsuario.trim(),
+          telefono: this.telefono.trim(),
+          correo: this.correo.trim(),
+          contrasena: this.contrasena,
+        })
+        .subscribe({
+          next: () => {
+            this.mensajeExito = 'Cuenta creada exitosamente. Iniciando sesión...';
+            this.changeDetector.markForCheck();
+            this.loginDirecto(this.correo);
+          },
+          error: (err) => {
+            this.enviando = false;
+            this.mensajeError = err.error?.detail || 'Error al registrar usuario.';
+            this.changeDetector.markForCheck();
+          },
+        });
     } else {
-      this.loginDirecto();
+      this.loginDirecto(identificador);
     }
   }
 
-  private loginDirecto() {
-    this.authService.iniciarSesion(this.correo, this.contrasena).subscribe({
+  private loginDirecto(identificador: string): void {
+    this.enviando = true;
+    this.authService.iniciarSesion(identificador, this.contrasena).subscribe({
       next: () => {
-        this.router.navigate(['/home']);
+        this.enviando = false;
+        this.changeDetector.markForCheck();
+        void this.router.navigate(['/home']);
       },
       error: (err) => {
-        this.mensajeError = err.error?.detail || 'Correo o contrasena incorrectos';
+        this.enviando = false;
+        this.mensajeError = err.error?.detail || 'Correo/celular o contraseña incorrectos.';
+        this.changeDetector.markForCheck();
       },
     });
   }

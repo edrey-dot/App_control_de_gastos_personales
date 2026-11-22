@@ -50,6 +50,19 @@ def test_flujo_autenticacion_y_gastos():
     assert resp_get.status_code == 200
     assert resp_get.json()["comercio"] == "Supermercado Central"
 
+    resp_rango = client.get(
+        "/gastos?fecha_inicio=2026-10-01&fecha_fin=2026-10-31",
+        headers=headers,
+    )
+    assert resp_rango.status_code == 200
+    assert any(gasto["id_gasto"] == id_gasto for gasto in resp_rango.json())
+
+    resp_rango_invalido = client.get(
+        "/gastos?fecha_inicio=2026-10-31&fecha_fin=2026-10-01",
+        headers=headers,
+    )
+    assert resp_rango_invalido.status_code == 400
+
     # 6. Rechazar campos prohibidos con 400 (R-01, R-03, HU-09)
     gasto_con_datos_sensibles = {
         "comercio": "Supermercado Central",
@@ -92,6 +105,38 @@ def test_flujo_autenticacion_y_gastos():
     assert resp_fecha_futura.status_code == 422
     assert resp_fecha_futura.json()["detail"] == "La fecha no puede ser posterior a hoy"
 
+    # 8a. Validar los mensajes exactos cuando faltan datos obligatorios
+    resp_sin_categoria = client.post(
+        "/gastos",
+        json={
+            "comercio": "Tienda",
+            "fecha": "2026-10-15",
+            "monto": 50000.0,
+        },
+        headers=headers,
+    )
+    assert resp_sin_categoria.status_code == 422
+    assert resp_sin_categoria.json()["detail"] == "Elige una categoria"
+
+    resp_sin_comercio = client.post(
+        "/gastos",
+        json={
+            "fecha": "2026-10-15",
+            "monto": 50000.0,
+            "id_categoria": id_cat,
+        },
+        headers=headers,
+    )
+    assert resp_sin_comercio.status_code == 422
+    assert resp_sin_comercio.json()["detail"] == "El comercio es obligatorio"
+
+    resp_json_mal_formado = client.post(
+        "/gastos",
+        content='{"comercio":',
+        headers={**headers, "Content-Type": "application/json"},
+    )
+    assert resp_json_mal_formado.status_code == 400
+
     # 9. Topes y alertas (HU-07, HU-08)
     resp_tope = client.put(
         "/topes",
@@ -101,3 +146,9 @@ def test_flujo_autenticacion_y_gastos():
     assert resp_tope.status_code == 200
     assert resp_tope.json()["alerta_80"] is True
     assert "Llevas el 85 % de tu tope" in resp_tope.json()["mensaje_alerta"]
+
+    # 10. Eliminar gasto
+    resp_delete = client.delete(f"/gastos/{id_gasto}", headers=headers)
+    assert resp_delete.status_code == 204
+    assert resp_delete.content == b""
+    assert client.get(f"/gastos/{id_gasto}", headers=headers).status_code == 404

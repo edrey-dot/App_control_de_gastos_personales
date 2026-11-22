@@ -1,11 +1,18 @@
+import logging
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from app.core.security import obtener_usuario_actual
 from app.db.models import Usuario
 from app.schemas.recibo import LecturaResponse
-from app.services.receipt_reader import obtener_receipt_reader
+from app.services.receipt_reader import (
+    ReceiptReaderTimeoutError,
+    ReceiptReaderUnavailableError,
+    obtener_receipt_reader,
+)
 
 router = APIRouter(prefix="/recibos", tags=["Lectura de Recibos (IA)"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/lecturas", response_model=LecturaResponse)
@@ -34,5 +41,24 @@ async def leer_recibo(
 
     contenido = await foto.read()
     reader = obtener_receipt_reader()
-    lectura = await reader.leer_recibo(contenido, foto.content_type)
+    try:
+        lectura = await reader.leer_recibo(contenido, foto.content_type)
+    except ReceiptReaderTimeoutError as error:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="El servicio de IA no responde o tardo demasiado",
+        ) from error
+    except ReceiptReaderUnavailableError as error:
+        detail = "No se pudo conectar con el proveedor de IA."
+        if error.provider_status_code is not None:
+            detail = (
+                f"El proveedor de IA respondió HTTP {error.provider_status_code}."
+            )
+            if error.provider_message:
+                detail += f" {error.provider_message}"
+        logger.warning("Falló la lectura del recibo: %s", detail)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=detail,
+        ) from error
     return lectura

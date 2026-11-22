@@ -28,7 +28,10 @@ CORS_ORIGINS: list[str] = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ORIGINS",
-        "http://localhost:4200,http://localhost:8100,http://localhost,capacitor://localhost",
+        # "http://localhost:4200,http://localhost:8100,http://localhost,capacitor://localhost",
+        "CORS_ORIGINS=http://localhost:4200,http://localhost:8100,http://localhost,capacitor://localhost,http://192.168.0.17:4200",
     ).split(",")
     if origin.strip()
 ]
+
+# "CORS_ORIGINS=http://localhost:4200,http://localhost:8100,http://localhost,capacitor://localhost,http://192.168.0.17:4200",

@@ -67,6 +67,12 @@ async def custom_validation_exception_handler(
     errores = exc.errors()
 
     for err in errores:
+        if err.get("type") == "json_invalid":
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": "JSON mal formado"},
+            )
+
         # Detectar campos extra prohibidos (R-03, HU-09: extra='forbid')
         if err.get("type") == "extra_forbidden":
             campo = err.get("loc", ["campo"])[-1]
@@ -74,6 +80,14 @@ async def custom_validation_exception_handler(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"detail": f"Campo no permitido: {campo}"},
             )
+
+        if err.get("type") == "value_error":
+            campo = err.get("loc", [""])[-1]
+            if campo in ("correo", "contrasena", "nombre_usuario", "telefono"):
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={"detail": err.get("msg", "Solicitud inválida")},
+                )
 
         # Errores con mensaje personalizado de negocio
         msg = err.get("msg", "")

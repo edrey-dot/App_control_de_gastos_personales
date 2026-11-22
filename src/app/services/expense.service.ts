@@ -1,7 +1,9 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+
 import { environment } from '../../environments/environment';
+
 import { AuthService } from './auth.service';
 
 export interface Categoria {
@@ -60,13 +62,25 @@ export class ExpenseService {
     return this.http.get<Categoria[]>(`${this.apiUrl}/categorias`, this.headers);
   }
 
-  obtenerGastos(fecha?: string): Observable<Gasto[]> {
-    const url = fecha ? `${this.apiUrl}/gastos?fecha=${fecha}` : `${this.apiUrl}/gastos`;
-    return this.http.get<Gasto[]>(url, this.headers);
+  obtenerGastos(fechaInicio?: string, fechaFin?: string): Observable<Gasto[]> {
+    let params = new HttpParams();
+    if (fechaInicio && fechaFin) {
+      params = params.set('fecha_inicio', fechaInicio).set('fecha_fin', fechaFin);
+    } else if (fechaInicio) {
+      params = params.set('fecha', fechaInicio);
+    }
+    return this.http.get<Gasto[]>(`${this.apiUrl}/gastos`, {
+      ...this.headers,
+      params,
+    });
   }
 
   crearGasto(gasto: Gasto): Observable<Gasto> {
     return this.http.post<Gasto>(`${this.apiUrl}/gastos`, gasto, this.headers);
+  }
+
+  eliminarGasto(idGasto: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/gastos/${idGasto}`, this.headers);
   }
 
   obtenerResumenMensual(anio: number, mes: number): Observable<ResumenMensual> {
@@ -78,10 +92,6 @@ export class ExpenseService {
   }
 
   definirTope(id_categoria: number, anio: number, mes: number, monto_tope: number): Observable<TopeMensual> {
-    return this.http.put<TopeMensual>(
-      `${this.apiUrl}/topes`,
-      { id_categoria, anio, mes, monto_tope },
-      this.headers
-    );
+    return this.http.put<TopeMensual>(`${this.apiUrl}/topes`, { id_categoria, anio, mes, monto_tope }, this.headers);
   }
 }

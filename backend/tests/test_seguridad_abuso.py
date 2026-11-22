@@ -85,6 +85,11 @@ def test_abuso_bola_usuario_no_puede_ver_gasto_ajeno():
     assert resp_abuso_b.status_code == 404
     assert resp_abuso_b.json()["detail"] == "Gasto no encontrado"
 
+    resp_eliminar_abuso = client.delete(f"/gastos/{id_gasto_a}", headers=headers_b)
+    assert resp_eliminar_abuso.status_code == 404
+    assert resp_eliminar_abuso.json()["detail"] == "Gasto no encontrado"
+    assert client.get(f"/gastos/{id_gasto_a}", headers=headers_a).status_code == 200
+
 
 def test_abuso_inyeccion_datos_sensibles_prohibidos_retorna_400():
     """Verifica que campos no permitidos (tarjeta, cvv, direccion) se rechacen con 400.
