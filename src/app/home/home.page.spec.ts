@@ -100,12 +100,8 @@ describe('HomePage', () => {
 
       // Entonces: la fecha queda marcada en rojo y muestra el mensaje de HU-02.
       expect(component.errorFecha).toBe('La fecha no puede ser posterior a hoy');
-      expect(fixture.nativeElement.textContent).toContain(
-        'La fecha no puede ser posterior a hoy',
-      );
-      expect(
-        fixture.nativeElement.querySelector('.preview-item.input-error'),
-      ).not.toBeNull();
+      expect(fixture.nativeElement.textContent).toContain('La fecha no puede ser posterior a hoy');
+      expect(fixture.nativeElement.querySelector('.preview-item.input-error')).not.toBeNull();
     } finally {
       vi.useRealTimers();
     }
@@ -118,9 +114,7 @@ describe('HomePage', () => {
 
     // Dado: el monto leído de $58.000 en la vista previa.
     // Cuando: se corrige a $85.000.
-    component.onMontoChange(
-      new CustomEvent('ionChange', { detail: { value: 85000 } }),
-    );
+    component.onMontoChange(new CustomEvent('ionChange', { detail: { value: 85000 } }));
 
     // Entonces: conserva el monto corregido y no vuelve a procesar la foto.
     expect(component.previewMonto).toBe(85000);
@@ -138,9 +132,7 @@ describe('HomePage', () => {
 
     // Dado: el monto anterior válido de $58.000.
     // Cuando: se ingresa un valor no numérico o cero.
-    component.onMontoChange(
-      new CustomEvent('ionChange', { detail: { value: montoIngresado } }),
-    );
+    component.onMontoChange(new CustomEvent('ionChange', { detail: { value: montoIngresado } }));
 
     // Entonces: muestra el mensaje de HU-03 y restaura el valor previo.
     expect(component.errorMonto).toBe('El monto debe ser un número mayor a 0');
@@ -170,9 +162,7 @@ describe('HomePage', () => {
     fixture.detectChanges();
 
     // Entonces: se muestra el mensaje de alerta de HU-08.
-    expect(fixture.nativeElement.textContent).toContain(
-      'Llevas el 81 % de tu tope en Comida',
-    );
+    expect(fixture.nativeElement.textContent).toContain('Llevas el 81 % de tu tope en Comida');
     expect(fixture.nativeElement.querySelector('.alert-box')).not.toBeNull();
   });
 
