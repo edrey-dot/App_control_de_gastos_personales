@@ -14,6 +14,11 @@ router = APIRouter(prefix="/topes", tags=["Topes Mensuales"])
 UMBRAL_ALERTA_PORCENTAJE = 80
 
 
+def _debe_mostrar_alerta_80(porcentaje: float) -> bool:
+    # Regla confirmada: alertar bajo y sobre 80 %, salvo justo en 80 %.
+    return porcentaje != UMBRAL_ALERTA_PORCENTAJE
+
+
 @router.put("", response_model=TopeResponse, status_code=status.HTTP_200_OK)
 def definir_tope(
     payload: TopeCreate,
@@ -81,7 +86,7 @@ def definir_tope(
 
     porcentaje_raw = (float(total_gastado) / float(payload.monto_tope)) * 100
     porcentaje = floor(porcentaje_raw)
-    alerta_80 = porcentaje >= UMBRAL_ALERTA_PORCENTAJE
+    alerta_80 = _debe_mostrar_alerta_80(porcentaje_raw)
     mensaje_alerta = (
         f"Llevas el {porcentaje} % de tu tope en {nombre_categoria}"
         if alerta_80
@@ -150,7 +155,7 @@ def listar_topes(
 
         porcentaje_raw = (float(total_gastado) / float(tope.monto_tope)) * 100
         porcentaje_entero = floor(porcentaje_raw)
-        alerta_80 = porcentaje_entero >= UMBRAL_ALERTA_PORCENTAJE
+        alerta_80 = _debe_mostrar_alerta_80(porcentaje_raw)
         mensaje_alerta = (
             f"Llevas el {porcentaje_entero} % de tu tope en {nombre_categoria}"
             if alerta_80

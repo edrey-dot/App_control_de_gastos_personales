@@ -16,23 +16,21 @@ Basé los resultados esperados de esta sección exclusivamente en los criterios 
 
 ### Reglas candidatas para la tabla de decisión
 
-Seleccioné **HU-08** para construir la tabla de decisión, evaluando la condición «hay tope para la categoría y el período» junto con «el gasto acumulado alcanza el umbral del 80 %». La historia define el resultado para el 81 % y para una categoría sin tope, pero no especifica un ejemplo de una categoría con tope cuyo gasto esté por debajo del umbral.
+Seleccioné **HU-08** para construir la tabla de decisión, evaluando si hay tope para la categoría/período y el gasto acumulado respecto del 80 %. El 26/11/2026, el usuario confirmó que una fecha igual a hoy es válida y que HU-08 debe alertar por debajo y por encima del 80 %, pero no exactamente en 80 %.
 
 ### Ambigüedades y discrepancias pendientes
 
-- HU-02 presenta ejemplos de una fecha pasada y una futura, pero no especifica expresamente qué ocurre si la fecha del gasto es exactamente hoy.
-- HU-08 indica «al llegar al 80 %» y ofrece un ejemplo al 81 %, pero no incluye un caso exactamente en 80 % ni uno por debajo de 80 % con tope definido.
 - HU-08 especifica el mensaje del caso de $325.000 sobre $400.000 (81 %), pero no define cómo mostrar porcentajes distintos a ese ejemplo.
+- La regla confirmada para HU-08 es no monotónica: hay alerta por debajo del 80 %, no hay alerta exactamente en 80 % y hay alerta por encima del 80 %. La alerta también se activa con gasto de $0 porque es menor al 80 %.
 - El mensaje de HU-03 incluye «número» y el de HU-04 «categoría» con tilde. Mis primeras pruebas detectaron que la implementación usaba las versiones sin tilde. Corregí los mensajes tanto en el backend como en la interfaz para cumplir estrictamente el texto de la historia sin alterar el oráculo.
 - HU-03 y HU-08 incluyen comportamientos de interfaz (conservar el monto anterior y mostrar «Sin tope definido») que no se pueden afirmar con pruebas unitarias del backend, por lo que no añadí comprobaciones artificiales para ellos.
-- Decidí dejar abiertas por ahora las fronteras de fecha igual a hoy, el 80 % exacto, el gasto menor al 80 % con tope y el formato de otros porcentajes, evitando asignarles un resultado esperado arbitrario.
 
 ### Auditoría previa de expectativas
 
 - **Particiones:** Representé en las tablas todas las particiones explícitas válidas e inválidas; los grupos sin oráculo quedaron marcados como pendientes.
-- **Límites:** Incluí los valores cero y el siguiente día futuro descritos; las fronteras sin regla explícita siguen pendientes.
-- **Origen del resultado esperado:** Criterios de aceptación de las historias de usuario analizadas.
-- **Ambigüedades:** Las dejé documentadas arriba sin convertirlas en esperados.
+- **Límites:** La fecha igual a hoy y los dos bordes de HU-08 se incorporaron tras confirmación explícita del usuario.
+- **Origen del resultado esperado:** Vinculé cada resultado a una HU o a la aclaración del usuario, nunca a la ejecución previa del código.
+- **Ambigüedades:** Sigue pendiente únicamente el formato del mensaje de alerta para porcentajes distintos del 81 % descrito.
 - **Reglas inventadas:** No añadí resultados para los escenarios que las historias no especifican.
 
 ## 2. Tablas de casos de prueba
@@ -61,30 +59,31 @@ Los casos describen el oráculo funcional. Cuando el criterio corresponde a la i
 | Regla | Borde identificado en la historia | Resultado | Estado |
 | --- | --- | --- | --- |
 | Fecha HU-02 | Día siguiente a hoy: 25/10/2026, con hoy 24/10/2026 | Es una fecha futura; debe rechazarse como la fecha futura del escenario 2. | Caso límite que propuse a partir de la partición explícita «fecha futura». |
-| Fecha HU-02 | Fecha igual a hoy: 24/10/2026 | No especificado por la historia. | Pendiente; no asigné resultado esperado ni lo incluí en las pruebas. |
+| Fecha HU-02 | Fecha igual a hoy: 24/10/2026 | La fecha es válida y se conserva. | Confirmado por el usuario el 26/11/2026; cubierto por `test_hu02_limite_fecha_igual_a_hoy_es_valida`. |
 | Monto HU-03 | $0 | Rechazado con el mensaje especificado. | Oráculo explícito. |
 | Monto HU-03 | Primer monto positivo representable | La historia no especifica unidad o precisión monetaria mínima. | Pendiente; no inventé una cantidad. |
 | Categoría HU-04 | Categoría ausente frente a «Comida» seleccionada | Ausente: rechazo; seleccionada: guardado. | Particiones explícitas; no hay otro límite cuantitativo. |
 | Tope HU-07 | $0 y -$50.000 | Ambos rechazados con el mensaje especificado. | Oráculo explícito. |
 | Tope HU-07 | Primer tope positivo representable | La historia no especifica unidad o precisión monetaria mínima. | Pendiente; no inventé una cantidad. |
-| Alerta HU-08 | 80 % exacto y gasto menor al 80 % con tope definido | No especificado por los escenarios; decidí mantenerlo abierto. | Pendiente; no asigné resultado esperado ni lo probé. |
+| Alerta HU-08 | Exactamente 80 %: $320.000 de $400.000 | No debe generar alerta. | Confirmado por el usuario el 26/11/2026; cubierto por pruebas backend y frontend. |
+| Alerta HU-08 | Por debajo de 80 %: $300.000 de $400.000 (75 %) | Debe generar alerta; el formato del mensaje no está especificado. | Confirmado por el usuario el 26/11/2026; cubierto por prueba backend. |
 
 ### Tabla de decisión — alerta HU-08
 
-Evalué las condiciones «hay un tope definido para la categoría/mes» y «el gasto mensual alcanza el umbral del 80 %». Incluí únicamente los resultados cuyo oráculo está escrito en HU-08; el comportamiento exacto en la frontera permanece pendiente.
+Evalué las condiciones «hay un tope definido para la categoría/mes» y «el gasto mensual respecto del tope». Las fronteras se incorporaron según la aclaración explícita del usuario del 26/11/2026.
 
 | Regla | ¿Hay tope definido? | ¿Alcanza el umbral? | ¿Alerta? | Resultado esperado | Origen |
 | --- | --- | --- | --- | --- | --- |
 | D08-1 | Sí | Sí: $325.000 de $400.000 (81 % según HU-08) | Sí | `Llevas el 81 % de tu tope en Comida` | HU-08, escenario 1 |
 | D08-2 | No | No aplica: gasto de $50.000 en «Ocio» | No | No aparece alerta; la interfaz indica `Sin tope definido` | HU-08, escenario 2 |
-| D08-P1 | Sí | 80 % exacto | Sin definir | Sin resultado esperado | Ambigüedad identificada |
-| D08-P2 | Sí | Menos de 80 % | Sin definir | Sin resultado esperado | Ambigüedad identificada |
+| D08-3 | Sí | Exacto: $320.000 de $400.000 (80 %) | No | No se muestra alerta | Aclaración confirmada por el usuario |
+| D08-4 | Sí | Menor: $300.000 de $400.000 (75 %) | Sí | Se muestra una alerta; texto específico pendiente | Aclaración confirmada por el usuario |
 
 ### Revisión de los casos diseñados
 
 1. **Particiones:** Incluí las entradas válidas e inválidas que aparecen explícitamente en las historias; señalé como pendientes los grupos no especificados.
-2. **Límites:** Anoté cero, el día siguiente y los bordes monetarios descritos, dejando abiertos los valores mínimos positivos y las fronteras de alerta sin definición.
-3. **Origen del esperado:** Vinculé cada resultado esperado a una HU y escenario específico, nunca a la ejecución previa del código.
+2. **Límites:** Anoté cero, el día siguiente y los bordes confirmados; siguen abiertos los valores mínimos positivos.
+3. **Origen del esperado:** Vinculé cada resultado esperado a una HU o a la aclaración explícita del usuario, nunca a la ejecución previa del código.
 4. **Ambigüedades:** Las mantuve identificadas arriba sin convertirlas en expectativas de prueba.
 5. **Reglas inventadas:** No asigné resultados a las filas pendientes ni extendí el ejemplo de porcentaje a otros formatos.
 
@@ -93,19 +92,30 @@ Evalué las condiciones «hay un tope definido para la categoría/mes» y «el g
 | Casos | Prueba parametrizada | ¿El esperado viene de HU? | ¿Detecta una rotura de la regla? | ¿Aporta cobertura distinta? | Decisión |
 | --- | --- | --- | --- | --- | --- |
 | F02-01, F02-02 | `test_hu02_reglas_de_fecha_de_las_historias` | Sí, HU-02 escenarios 1 y 2 | Sí: comprueba que la fecha pasada se acepta y que la futura se rechaza con el mensaje exacto. | Sí: cubre las particiones válida e inválida. | Conservada. |
+| F02-03 | `test_hu02_limite_fecha_igual_a_hoy_es_valida` | Sí, aclaración del usuario del 26/11/2026 | Sí: falla si se rechaza la fecha igual a hoy. | Sí: cubre la frontera confirmada. | Conservada e incorporada a los criterios automatizables. |
 | F03-01 | `test_hu03_valida_monto_al_guardar[85000]` | Sí, HU-03 escenario 1 | Sí: falla si el monto corregido deja de aceptarse o cambia de valor. | Sí: cubre una entrada numérica válida. | Conservada; utilicé `pytest.approx` para el valor decimal. |
 | F03-02 | `test_hu03_valida_monto_al_guardar[0]` | Sí, HU-03 escenario 2 | Sí: falla si cero deja de rechazarse o cambia el mensaje exigido. | Sí: cubre el borde inválido cero. | Conservada; resolví el fallo inicial corrigiendo el mensaje fuente, no el esperado. |
 | F03-03 | `test_hu03_valida_monto_al_guardar[abc]` | Sí, HU-03 escenario 2 | Sí: falla si un monto no numérico se acepta. | Sí: distingue texto no numérico del cero numérico. | Conservada. La prueba de backend no afirma el mensaje de interfaz ni que se conserve el valor previo. |
 | F04-01, F04-02 | `test_hu04_categoria_requerida` | Sí, HU-04 escenarios 1 y 2 | Sí: verifica el guardado con «Comida» y el rechazo, mensaje y no persistencia si falta categoría. | Sí: cubre las particiones con y sin categoría. | Conservada; resolví el fallo inicial corrigiendo el mensaje fuente, no el esperado. |
 | F07-01, F07-02, F07-03 | `test_hu07_valida_tope_mensual` | Sí, HU-07 escenarios 1 y 2 | Sí: comprueba tope positivo, rechazo de negativo/cero y que un rechazo no persista. | Sí: negativo y cero cubren una entrada inválida y el límite cero. | Conservada; utilicé `pytest.approx` en los montos decimales. |
 | F08-01, F08-02 | `test_hu08_alerta_depende_de_tope_y_gasto` | Sí, HU-08 escenarios 1 y 2 | Sí: detecta la ausencia de alerta con el caso 81 % o la aparición de un tope/alerta para categoría sin tope. | Sí: ejercita las dos combinaciones definidas de la tabla de decisión. | Conservada. La etiqueta de interfaz «Sin tope definido» no se afirma desde `pytest` backend. |
+| F08-03, F08-04 | `test_hu08_alerta_depende_de_tope_y_gasto` | Sí, aclaración del usuario del 26/11/2026 | Sí: detecta alerta al 75 % y ausencia de alerta al 80 % exacto. | Sí: ejercita ambos límites confirmados. | Añadidas; no se fija el texto para el 75 % porque no está especificado. |
 
 #### Pruebas corregidas o descartadas
 
 - Los primeros resultados de **F03-02** y **F04-02** fallaron porque las respuestas del sistema contenían `numero` y `categoria` sin tilde. Mantuve los valores esperados escritos en HU-03/HU-04 y corregí los mensajes correspondientes tanto en el backend como en la interfaz; tras el cambio, ambas pruebas pasaron.
 - Actualicé las dos aserciones previas en `test_api_endpoints.py` que esperaban los mensajes sin tilde para alinearlas con las historias.
 - No descarté ninguna de las pruebas que generé esta semana.
-- Conservé `test_hu02_limite_fecha_igual_a_hoy_es_valida` (prueba preexistente) fuera del conjunto nuevo porque su esperado no está resuelto en las HU compartidas, evitando usarla como oráculo de los casos nuevos.
+- La prueba de fecha igual a hoy se mantuvo fuera de los casos nuevos hasta que el usuario confirmó el 26/11/2026 que esa fecha es válida; desde entonces se cuenta como criterio automatizable.
+
+### Actualización Semana 8 — 26/11/2026
+
+- Se añadieron pasos Dado/Cuando/Entonces y aserciones de estado/historial para los casos automatizables HU-02, HU-03, HU-04, HU-07 y HU-08.
+- Se verificaron desde la interfaz la fecha futura en rojo, la corrección del monto sin releer el recibo, la restauración del monto anterior y los mensajes/estados de alertas cubiertos por criterios confirmados.
+- El usuario confirmó una regla HU-08 no monotónica: alertar por debajo y por encima del 80 %, pero no exactamente en 80 %. Se centralizó esta condición en `app/api/topes.py`; las pruebas cubren 75 %, 80 % y 81 %. El formato del mensaje para otros porcentajes continúa sin especificar.
+- Validación final: backend **35 passed** con cobertura de líneas/ramas; frontend **18 passed**; Ruff sin observaciones en los archivos Python modificados.
+- Cobertura global backend: **85 %**. `Missing` concentra huecos en `api/gastos.py` (incluido resumen mensual y ramas de filtros), `services/receipt_reader.py` y `api/auth.py`. No se añadieron resultados para esas rutas sin criterios/escenarios suficientes.
+- Las mutaciones conceptuales de 80 % exacto y menor al 80 % quedan protegidas por regresiones; no se modificó temporalmente el código para ejecutar mutación en esta sesión.
 
 ## 3. Sensibilidad de las pruebas ante fallos intencionales
 
@@ -130,4 +140,4 @@ El diccionario `datos` del fixture contiene:
 - `monto_cero`: `0` y `monto_no_numerico`: `abc`, correspondientes a las entradas inválidas de HU-03.
 - `monto_valido`: `85000`, valor de corrección especificado en HU-03.
 
-Todos los valores de topes, fechas, categorías y gastos usados en las pruebas son ficticios y provienen de los escenarios de HU-02/03/04/07/08, sin utilizar datos de producción.
+Todos los valores de topes, fechas, categorías y gastos usados en las pruebas son ficticios. El caso de $320.000 se deriva del 80 % del tope explícito de $400.000; $300.000 ya aparece en el escenario existente de HU-08. No se utilizan datos de producción.

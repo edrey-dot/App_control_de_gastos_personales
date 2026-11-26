@@ -34,9 +34,13 @@ def test_hu02_reglas_de_fecha_de_las_historias(
     fecha_gasto, hoy_simulado, esperada, error_esperado
 ):
     """Comprueba los dos escenarios de fecha explícitos en HU-02."""
+    # Dado: la fecha del gasto y «hoy» de los escenarios HU-02.
+    # Cuando: se valida la fecha con una referencia determinista.
     if error_esperado is None:
+        # Entonces: la fecha pasada se conserva.
         assert validar_fecha_gasto(fecha_gasto, hoy=hoy_simulado) == esperada
     else:
+        # Entonces: la fecha futura se rechaza con el mensaje exacto.
         with pytest.raises(ValueError) as exc_info:
             validar_fecha_gasto(fecha_gasto, hoy=hoy_simulado)
 
@@ -58,12 +62,15 @@ def test_hu02_fecha_pasada_sin_parametro_hoy_usa_fecha_actual():
 
 
 def test_hu02_limite_fecha_igual_a_hoy_es_valida():
-    """HU-02 Caso límite: Una fecha exactamente igual al umbral 'hoy' es válida."""
+    """Aclaración confirmada: una fecha igual a hoy es válida."""
     hoy_simulado = date(2026, 10, 24)
     fecha_hoy = date(2026, 10, 24)
 
+    # Dado: hoy es 24/10/2026 y el gasto tiene esa misma fecha.
+    # Cuando: se valida la fecha con la referencia confirmada por el usuario.
     resultado = validar_fecha_gasto(fecha_hoy, hoy=hoy_simulado)
 
+    # Entonces: la fecha igual a hoy se conserva como válida.
     assert resultado == fecha_hoy
 
 
@@ -88,7 +95,10 @@ def test_hu02_limite_error_fecha_de_manana_es_rechazada():
     fecha_manana = hoy_simulado + timedelta(days=1)
     mensaje_esperado = "La fecha no puede ser posterior a hoy"
 
+    # Dado: hoy es 24/10/2026 y el gasto tiene fecha 25/10/2026.
+    # Cuando: se valida la fecha del día siguiente.
     with pytest.raises(ValueError) as exc_info:
         validar_fecha_gasto(fecha_manana, hoy=hoy_simulado)
 
+    # Entonces: se rechaza con el mensaje requerido para una fecha futura.
     assert str(exc_info.value) == mensaje_esperado

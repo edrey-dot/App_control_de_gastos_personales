@@ -40,22 +40,30 @@ def test_flujo_autenticacion_y_gastos():
         "monto": 85000.0,
         "id_categoria": id_cat,
     }
+    # Dado: un usuario autenticado y una categoría disponible.
+    # Cuando: registra un gasto con los datos del escenario HU-02.
     resp_gasto = client.post("/gastos", json=gasto_data, headers=headers)
+    # Entonces: se crea y devuelve el gasto con todos sus datos.
     assert resp_gasto.status_code == 201
     assert "Location" in resp_gasto.headers
-    id_gasto = resp_gasto.json()["id_gasto"]
+    gasto_creado = resp_gasto.json()
+    id_gasto = gasto_creado["id_gasto"]
+    assert gasto_creado["comercio"] == gasto_data["comercio"]
+    assert gasto_creado["fecha"] == gasto_data["fecha"]
+    assert gasto_creado["monto"] == gasto_data["monto"]
+    assert gasto_creado["id_categoria"] == id_cat
 
     # 5. Obtener gasto creado
     resp_get = client.get(f"/gastos/{id_gasto}", headers=headers)
     assert resp_get.status_code == 200
-    assert resp_get.json()["comercio"] == "Supermercado Central"
+    assert resp_get.json() == gasto_creado
 
     resp_rango = client.get(
         "/gastos?fecha_inicio=2026-10-01&fecha_fin=2026-10-31",
         headers=headers,
     )
     assert resp_rango.status_code == 200
-    assert any(gasto["id_gasto"] == id_gasto for gasto in resp_rango.json())
+    assert resp_rango.json() == [gasto_creado]
 
     resp_rango_invalido = client.get(
         "/gastos?fecha_inicio=2026-10-31&fecha_fin=2026-10-01",
@@ -92,6 +100,8 @@ def test_flujo_autenticacion_y_gastos():
     assert resp_monto_cero.json()["detail"] == "El monto debe ser un número mayor a 0"
 
     # 8. Rechazar fecha futura con mensaje exacto (HU-02)
+    # Dado: una solicitud de gasto con fecha 01/01/2099.
+    # Cuando: el usuario intenta registrarla.
     resp_fecha_futura = client.post(
         "/gastos",
         json={
@@ -102,8 +112,12 @@ def test_flujo_autenticacion_y_gastos():
         },
         headers=headers,
     )
+    # Entonces: se rechaza y no aparece en el historial.
     assert resp_fecha_futura.status_code == 422
     assert resp_fecha_futura.json()["detail"] == "La fecha no puede ser posterior a hoy"
+    gastos_futuros = client.get("/gastos?fecha=2099-01-01", headers=headers)
+    assert gastos_futuros.status_code == 200
+    assert gastos_futuros.json() == []
 
     # 8a. Validar los mensajes exactos cuando faltan datos obligatorios
     resp_sin_categoria = client.post(
