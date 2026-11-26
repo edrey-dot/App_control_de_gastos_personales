@@ -1,5 +1,7 @@
 # Registro de pruebas - Semana 7
 
+> Los criterios de aceptación están consolidados en [criterios_aceptacion.md](./criterios_aceptacion.md). Este archivo conserva los casos, resultados de ejecución, cobertura y análisis de mutaciones.
+
 ## 1. Funciones seleccionadas y reglas de negocio
 
 ### Fuente de los oráculos
