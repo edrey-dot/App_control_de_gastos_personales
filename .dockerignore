@@ -1,0 +1,43 @@
+# Secrets, local configuration, and local data
+.env*
+**/.env*
+*.db
+**/*.db
+*.sqlite
+**/*.sqlite
+*.sqlite3
+**/*.sqlite3
+
+# Repository metadata and editor files
+.git
+.github
+.vscode
+
+# Dependencies, generated output, and caches
+node_modules
+**/node_modules
+www
+dist
+.angular
+**/.angular
+.venv
+venv
+**/.venv
+**/venv
+__pycache__
+**/__pycache__
+.pytest_cache
+**/.pytest_cache
+.ruff_cache
+**/.ruff_cache
+.coverage
+**/.coverage
+coverage
+**/coverage
+
+# Test artifacts and non-runtime sources
+e2e
+playwright-report
+test-results
+blob-report
+backend/tests
